@@ -8,11 +8,17 @@
     <meta name="apple-mobile-web-app-title" content="YouTube">
     <link rel="apple-touch-icon" href="youtube-play.jpg">
     <link rel="manifest" href="manifest.json">
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
     <title>YouTube</title>
     <style>
         body { background: #f1f1f1; font-family: "Helvetica Neue", Helvetica, sans-serif; margin: 0; padding-top: 52px; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; }
+        
+        /* ヘッダー */
         .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
         .logo-img { height: 22px; }
+        .search-icon { font-size: 24px; color: #030303; cursor: pointer; }
 
         /* 動画リスト */
         .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; }
@@ -24,7 +30,7 @@
         .v-title { font-size: 14px; color: #111; font-weight: bold; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .v-meta { font-size: 12px; color: #606060; margin-top: 4px; }
 
-        /* エラー画面（image_16cecc.png風） */
+        /* エラー画面 */
         .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px 20px; text-align: center; color: #606060; }
         .error-icon { width: 80px; height: 80px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
         .error-icon::after { content: "!"; font-size: 45px; color: #fff; font-weight: bold; }
@@ -34,15 +40,18 @@
         /* 全画面プレイヤー */
         .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 2000; overflow-y: auto; }
         .video-box { width: 100%; aspect-ratio: 16/9; background: #000; position: sticky; top: 0; z-index: 2100; }
+
+        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 3000; }
-        .tab-item { flex: 1; text-align: center; padding-top: 6px; color: #606060; font-size: 10px; }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #606060; font-size: 10px; cursor: pointer; }
+        .tab-item .material-icons-outlined { font-size: 24px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div onclick="location.reload()"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img"></div>
-    <div style="font-size: 20px;" onclick="showSearch()">🔍</div>
+    <span class="material-icons-outlined search-icon" onclick="showSearch()">search</span>
 </div>
 
 <div id="main-view"></div>
@@ -57,16 +66,24 @@
 </div>
 
 <div class="tab-bar">
-    <div class="tab-item" onclick="loadHome()">🏠<br>ホーム</div>
-    <div class="tab-item" onclick="loadHome()">🔥<br>急上昇</div>
-    <div class="tab-item" onclick="loadHome()">📁<br>ライブラリ</div>
+    <div class="tab-item" onclick="loadHome()">
+        <span class="material-icons-outlined">home</span>
+        <span>ホーム</span>
+    </div>
+    <div class="tab-item" onclick="loadHome()">
+        <span class="material-icons-outlined">local_fire_department</span>
+        <span>急上昇</span>
+    </div>
+    <div class="tab-item" onclick="loadHome()">
+        <span class="material-icons-outlined">video_library</span>
+        <span>ライブラリ</span>
+    </div>
 </div>
 
 <script>
     const KEY = 'AIzaSyA46GQprT1Cc0kmqLGHYn2fqHMspIxzRlE';
     const keywords = ['ゲーム実況', 'Minecraft', 'Fortnite', 'ゆっくり実況', '料理'];
 
-    // エラー画面を表示する関数
     function renderError(targetId) {
         const container = document.getElementById(targetId);
         container.innerHTML = `
@@ -129,7 +146,7 @@
 
         const vData = await fetchFull(`videos?part=snippet,statistics&id=${id}`);
         if (vData === "API_LIMIT") {
-            renderError('player-page'); // プレイヤー内でもエラーなら表示
+            renderError('player-page');
             return;
         }
         
