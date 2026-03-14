@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { background: #7494c0; margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* ヘッダー */
+        .chat-header { height: 45px; background: #354961; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; position: fixed; top: 0; width: 100%; z-index: 10; }
+
+        /* トークエリア */
+        .message-list { flex: 1; overflow-y: scroll; padding: 60px 10px 70px; -webkit-overflow-scrolling: touch; }
+        .msg-row { display: flex; flex-direction: column; margin-bottom: 15px; }
+        .msg-content { max-width: 80%; padding: 8px 12px; border-radius: 15px; font-size: 14px; position: relative; line-height: 1.4; }
+        
+        /* 相手のメッセージ（左） */
+        .msg-left { align-items: flex-start; }
+        .msg-left .msg-content { background: #fff; color: #000; margin-left: 10px; }
+        .msg-user { font-size: 10px; color: #fff; margin-bottom: 2px; margin-left: 12px; }
+
+        /* 自分のメッセージ（右） */
+        .msg-right { align-items: flex-end; }
+        .msg-right .msg-content { background: #85e249; color: #000; margin-right: 10px; }
+
+        /* 入力エリア */
+        .input-area { position: fixed; bottom: 0; width: 100%; padding: 10px; background: #fff; display: flex; box-sizing: border-box; }
+        .input-box { flex: 1; border: 1px solid #ccc; border-radius: 20px; padding: 5px 15px; font-size: 16px; outline: none; }
+        .send-btn { margin-left: 10px; background: #007aff; color: #fff; border: none; border-radius: 50%; width: 35px; height: 35px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="chat-header" id="header-name"># soumano_group</div>
+
+<div class="message-list" id="msg-list"></div>
+
+<div class="input-area">
+    <input type="text" id="chat-input" class="input-box" placeholder="メッセージを入力" onkeypress="if(event.keyCode===13){sendMsg();}">
+    <button class="send-btn" onclick="sendMsg()">></button>
+</div>
+
+<script>
+    // --- Firebase設定 ---
+    var firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+
+    // 【重要】名前を一生「soumano」にロック（変更用関数を作らない）
+    var MY_NAME = "soumano";
+
+    // 受信処理
+    db.ref('messages').limitToLast(30).on('value', function(snapshot) {
+        var list = document.getElementById('msg-list');
+        list.innerHTML = '';
+        snapshot.forEach(function(child) {
+            var data = child.val();
+            var isMe = (data.user === MY_NAME);
+            
+            var row = document.createElement('div');
+            row.className = isMe ? 'msg-row msg-right' : 'msg-row msg-left';
+            
+            var html = '';
+            if (!isMe) html += '<span class="msg-user">' + data.user + '</span>';
+            html += '<div class="msg-content">' + data.text + '</div>';
+            
+            row.innerHTML = html;
+            list.appendChild(row);
+        });
+        list.scrollTop = list.scrollHeight;
+    });
+
+    // 送信処理
+    function sendMsg() {
+        var input = document.getElementById('chat-input');
+        var text = input.value;
+        if (text.length > 0) {
+            db.ref('messages').push({
+                user: MY_NAME,
+                text: text,
+                timestamp: Date.now()
+            });
+            input.value = '';
+            // iOS 9でキーボードを閉じるための処理
+            input.blur();
+        }
+    }
+</script>
+</body>
+</html>
