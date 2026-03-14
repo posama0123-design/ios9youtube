@@ -1,0 +1,15 @@
+{
+  "short_name": "Twitter",
+  "name": "Twitter News for iOS 9",
+  "icons": [
+    {
+      "src": "image_14fcbc.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "twitter.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
+}
