@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YouTube Fixed</title>
+    <style>
+        body { background: #f1f1f1; font-family: "Helvetica Neue", Helvetica, sans-serif; margin: 0; padding-top: 52px; padding-bottom: 50px; }
+        .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
+        .logo-img { height: 22px; }
+        
+        /* リスト表示（ホーム・検索結果） */
+        .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; cursor: pointer; }
+        .thumb-cont { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .thumb-img { width: 100%; height: 100%; object-fit: cover; }
+        .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; padding: 2px 4px; border-radius: 2px; }
+        .v-detail { padding: 12px; display: flex; }
+        .v-avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; overflow: hidden; background: #eee; }
+        .v-avatar img { width: 100%; height: 100%; }
+        .v-title { font-size: 14px; color: #111; font-weight: bold; line-height: 1.4; margin: 0; }
+        .v-meta { font-size: 12px; color: #606060; margin-top: 4px; }
+
+        /* 再生画面 */
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 2000; overflow-y: auto; }
+        .video-box { width: 100%; aspect-ratio: 16/9; background: #000; position: sticky; top: 0; z-index: 2100; }
+        
+        .section-title { padding: 10px 15px; font-size: 13px; font-weight: bold; color: #606060; background: #f9f9f9; border-top: 1px solid #eee; }
+        #p-desc { font-size: 13px; color: #333; padding: 10px 15px; border-bottom: 1px solid #eee; white-space: pre-wrap; display: none; background: #fafafa; }
+
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 3000; }
+        .tab-item { flex: 1; text-align: center; padding-top: 6px; color: #606060; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div onclick="location.reload()"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img"></div>
+    <div style="font-size: 18px;" onclick="showSearch()">🔍</div>
+</div>
+
+<div id="main-view"></div>
+
+<div id="player-page" class="full-page">
+    <div id="yt-player-cont" class="video-box"></div>
+    
+    <div style="padding:15px; border-bottom:1px solid #eee;" onclick="toggleDesc()">
+        <p id="p-title" style="font-size:16px; margin:0; font-weight:bold;"></p>
+        <p id="p-views" class="v-meta"></p>
+        <div style="color:#065fd4; font-size:12px; margin-top:5px;">▼ 説明を表示</div>
+    </div>
+    <div id="p-desc"></div>
+    
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 15px; border-bottom:1px solid #eee;">
+        <div style="display:flex; align-items:center;">
+            <div class="v-avatar" id="p-chan-icon" style="width:32px; height:32px;"></div>
+            <div id="p-chan-name" style="font-size:14px; font-weight:bold;"></div>
+        </div>
+        <div style="color:red; font-weight:bold; font-size:13px; border:1px solid red; padding:4px 8px;">登録</div>
+    </div>
+    
+    <div class="section-title">コメント</div>
+    <div id="p-comments"></div>
+
+    <div class="section-title">次の動画</div>
+    <div id="p-recs"></div>
+
+    <div style="padding:40px; text-align:center; color:#888;" onclick="closePlayer()">✕ 閉じる</div>
+</div>
+
+<div class="tab-bar">
+    <div class="tab-item" onclick="loadHome()">🏠<br>ホーム</div>
+    <div class="tab-item" onclick="loadHome()">🔥<br>急上昇</div>
+    <div class="tab-item" onclick="loadHome()">📁<br>ライブラリ</div>
+</div>
+
+<script>
+    const KEY = 'AIzaSyA91JgBpFYBoBT4yMpEF7mz4TWyaIOqV38';
+
+    // 配列をバラバラに混ぜる関数（決まった動画対策）
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    async function fetchFull(path) {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/${path}&key=${KEY}`);
+        const data = await res.json();
+        if(!data.items) return [];
+        const ids = data.items.map(i => i.id.videoId || i.id).join(',');
+        const detail = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${ids}&key=${KEY}`);
+        return (await detail.json()).items;
+    }
+
+    function renderList(items, targetId) {
+        const container = document.getElementById(targetId);
+        container.innerHTML = "";
+        items.forEach(v => {
+            const duration = v.contentDetails ? parseDuration(v.contentDetails.duration) : "";
+            container.insertAdjacentHTML('beforeend', `
+                <div class="video-item" onclick="openPlayer('${v.id}')">
+                    <div class="thumb-cont">
+                        <img src="${v.snippet.thumbnails.high.url}" class="thumb-img">
+                        <span class="v-duration">${duration}</span>
+                    </div>
+                    <div class="v-detail">
+                        <div class="v-avatar"><img src="${v.snippet.thumbnails.default.url}"></div>
+                        <div>
+                            <p class="v-title">${v.snippet.title}</p>
+                            <p class="v-meta">${v.snippet.channelTitle} • ${parseInt(v.statistics.viewCount).toLocaleString()}回</p>
+                        </div>
+                    </div>
+                </div>`);
+        });
+    }
+
+    function parseDuration(pt) {
+        const m = pt.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        const h = parseInt(m[1]||0), min = parseInt(m[2]||0), sec = parseInt(m[3]||0);
+        return (h>0?h+':':'') + (min<10&&h>0?'0':'')+min+':'+(sec<10?'0':'')+sec;
+    }
+
+    async function loadHome() {
+        // 多めに取得してシャッフルすることで「いつも同じ」を回避
+        let vids = await fetchFull(`videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=30`);
+        renderList(shuffle(vids).slice(0, 15), 'main-view');
+    }
+
+    async function openPlayer(id) {
+        const pPage = document.getElementById('player-page');
+        pPage.style.display = 'block';
+        pPage.scrollTop = 0; // ページトップへ戻す
+
+        const vData = await fetchFull(`videos?part=snippet,statistics,contentDetails&id=${id}`);
+        const v = vData[0];
+
+        document.getElementById('p-title').innerText = v.snippet.title;
+        document.getElementById('p-views').innerText = parseInt(v.statistics.viewCount).toLocaleString() + " 回視聴";
+        document.getElementById('p-desc').innerText = v.snippet.description;
+        document.getElementById('p-chan-name').innerText = v.snippet.channelTitle;
+        document.getElementById('p-chan-icon').innerHTML = `<img src="${v.snippet.thumbnails.default.url}">`;
+
+        // 再生（iOS 9.3.6 成功方式）
+        document.getElementById('yt-player-cont').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+
+        // コメント取得
+        const cRes = await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${id}&maxResults=5&key=${KEY}`).then(r => r.json());
+        const cCont = document.getElementById('p-comments');
+        cCont.innerHTML = "";
+        if(cRes.items) {
+            cRes.items.forEach(i => {
+                const s = i.snippet.topLevelComment.snippet;
+                cCont.insertAdjacentHTML('beforeend', `<div style="display:flex; padding:10px 15px; border-bottom:1px solid #eee; background:#fff;"><img src="${s.authorProfileImageUrl}" style="width:24px; height:24px; border-radius:50%; margin-right:10px;"><div style="font-size:12px;"><b>${s.authorDisplayName}</b><br>${s.textDisplay}</div></div>`);
+            });
+        }
+
+        // 次の動画取得
+        const rVids = await fetchFull(`search?part=snippet&type=video&relatedToVideoId=${id}&maxResults=8`);
+        renderList(rVids, 'p-recs');
+    }
+
+    function toggleDesc() { const d = document.getElementById('p-desc'); d.style.display = (d.style.display=='block'?'none':'block'); }
+    function closePlayer() { document.getElementById('player-page').style.display='none'; document.getElementById('yt-player-cont').innerHTML=''; }
+    function showSearch() { const q = prompt("検索ワードを入力"); if(q) execSearch(q); }
+    async function execSearch(q) {
+        const vids = await fetchFull(`search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=15`);
+        renderList(vids, 'main-view');
+    }
+
+    window.onload = loadHome;
+</script>
+</body>
+</html>
