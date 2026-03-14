@@ -3,45 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="YouTube">
-    
     <link rel="apple-touch-icon" href="https://www.youtube.com/s/desktop/28e5114d/img/favicon_144x144.png">
-    
+    <link rel="manifest" href="manifest.json">
     <title>YouTube</title>
     <style>
         body { background: #f1f1f1; font-family: "Helvetica Neue", Helvetica, sans-serif; margin: 0; padding-top: 52px; padding-bottom: 50px; -webkit-tap-highlight-color: transparent; }
-        
-        /* ヘッダー */
         .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
         .logo-img { height: 22px; }
 
-        /* リスト表示（画像1のようなレイアウト） */
-        .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; cursor: pointer; }
-        .thumb-cont { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        /* 動画リスト */
+        .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; }
+        .thumb-cont { width: 100%; aspect-ratio: 16/9; background: #000; }
         .thumb-img { width: 100%; height: 100%; object-fit: cover; }
-        .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; font-size: 11px; padding: 2px 4px; border-radius: 2px; }
         .v-detail { padding: 12px; display: flex; }
-        .v-avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; overflow: hidden; background: #eee; }
+        .v-avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; background: #eee; overflow: hidden; }
         .v-avatar img { width: 100%; height: 100%; }
-        .v-title { font-size: 14px; color: #111; font-weight: bold; line-height: 1.4; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .v-title { font-size: 14px; color: #111; font-weight: bold; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .v-meta { font-size: 12px; color: #606060; margin-top: 4px; }
 
-        /* プレイヤー & チャンネルページ（全画面） */
+        /* エラー画面（image_16cecc.png風） */
+        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px 20px; text-align: center; color: #606060; }
+        .error-icon { width: 80px; height: 80px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+        .error-icon::after { content: "!"; font-size: 45px; color: #fff; font-weight: bold; }
+        .error-text { font-size: 20px; color: #666; margin-bottom: 8px; }
+        .error-sub { font-size: 16px; color: #999; }
+
+        /* 全画面プレイヤー */
         .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 2000; overflow-y: auto; }
         .video-box { width: 100%; aspect-ratio: 16/9; background: #000; position: sticky; top: 0; z-index: 2100; }
-        .section-title { padding: 12px 15px; font-size: 14px; font-weight: bold; color: #111; background: #f9f9f9; border-top: 1px solid #eee; }
-
-        /* チャンネルページ（画像12の再現） */
-        .ch-header { text-align: center; padding: 30px 10px; border-bottom: 1px solid #eee; }
-        .ch-logo { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; }
-        .ch-tabs { display: flex; border-bottom: 1px solid #eee; sticky; top: 52px; background: #fff; }
-        .ch-tab { flex: 1; text-align: center; padding: 15px 0; font-size: 13px; font-weight: bold; color: #606060; border-bottom: 2px solid transparent; }
-        .ch-tab.active { color: #111; border-bottom-color: #111; }
-
-        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 3000; }
         .tab-item { flex: 1; text-align: center; padding-top: 6px; color: #606060; font-size: 10px; }
     </style>
@@ -61,43 +53,7 @@
         <p id="p-title" style="font-size:16px; margin:0; font-weight:bold;"></p>
         <p id="p-views" class="v-meta"></p>
     </div>
-    
-    <div id="p-chan-btn" style="display:flex; align-items:center; justify-content:space-between; padding:12px 15px; border-bottom:1px solid #eee;">
-        <div style="display:flex; align-items:center;">
-            <div class="v-avatar" id="p-chan-icon" style="width:36px; height:36px;"></div>
-            <div id="p-chan-name" style="font-size:14px; font-weight:bold;"></div>
-        </div>
-        <div style="background:#000; color:#fff; padding:6px 12px; border-radius:15px; font-size:12px;">チャンネル登録</div>
-    </div>
-    
-    <div class="section-title">コメント</div>
-    <div id="p-comments"></div>
-
-    <div class="section-title">次の動画</div>
-    <div id="p-recs"></div>
     <div style="padding:40px; text-align:center; color:#888;" onclick="closePlayer()">✕ プレイヤーを閉じる</div>
-</div>
-
-<div id="channel-page" class="full-page" style="z-index: 4000;">
-    <div style="height: 52px; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #eee; background: #fff; position: sticky; top: 0; z-index: 4100;">
-        <span onclick="closeChannel()" style="font-size: 24px; padding-right: 20px;">←</span>
-        <b id="c-header-name"></b>
-    </div>
-    
-    <div class="ch-header">
-        <img id="c-logo" class="ch-logo" src="">
-        <h2 id="c-name" style="margin: 0; font-size: 20px;"></h2>
-        <div id="c-sub-count" style="font-size:13px; color:#606060; margin: 8px 0;"></div>
-        <div style="background:#000; color:#fff; padding:8px 24px; border-radius:20px; display:inline-block; font-size:14px; font-weight:bold;">チャンネル登録</div>
-    </div>
-
-    <div class="ch-tabs">
-        <div class="ch-tab active">ホーム</div>
-        <div class="ch-tab">動画</div>
-        <div class="ch-tab">再生リスト</div>
-    </div>
-
-    <div id="c-videos-view"></div>
 </div>
 
 <div class="tab-bar">
@@ -108,45 +64,62 @@
 
 <script>
     const KEY = 'AIzaSyA91JgBpFYBoBT4yMpEF7mz4TWyaIOqV38';
+    const keywords = ['ゲーム実況', 'Minecraft', 'Fortnite', 'ゆっくり実況', '料理'];
 
-    // ランダムな動画を取得するためのワード
-    const keywords = ['ゲーム実況', '料理', 'Minecraft', 'ニュース', '音楽', 'Vlog', 'お笑い'];
+    // エラー画面を表示する関数
+    function renderError(targetId) {
+        const container = document.getElementById(targetId);
+        container.innerHTML = `
+            <div class="error-container" onclick="location.reload()">
+                <div class="error-icon"></div>
+                <div class="error-text">読み込みエラー</div>
+                <div class="error-sub">再試行するにはタップしてください</div>
+            </div>`;
+    }
 
     async function fetchFull(path) {
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/${path}&key=${KEY}`);
-        const data = await res.json();
-        if(!data.items || data.items.length === 0) return [];
-        const ids = data.items.map(i => i.id.videoId || i.id).join(',');
-        const detail = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${ids}&key=${KEY}`);
-        return (await detail.json()).items;
+        try {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/${path}&key=${KEY}`);
+            const data = await res.json();
+            if (data.error) return "API_LIMIT"; 
+            if (!data.items || data.items.length === 0) return [];
+
+            const ids = data.items.map(i => i.id.videoId || i.id).join(',');
+            const detail = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${ids}&key=${KEY}`);
+            return (await detail.json()).items || [];
+        } catch (e) {
+            return "NETWORK_ERROR";
+        }
     }
 
     function renderList(items, targetId) {
         const container = document.getElementById(targetId);
-        container.innerHTML = "";
-        items.forEach(v => {
-            container.insertAdjacentHTML('beforeend', `
-                <div class="video-item" onclick="openPlayer('${v.id}')">
-                    <div class="thumb-cont">
-                        <img src="${v.snippet.thumbnails.high.url}" class="thumb-img">
+        container.innerHTML = items.map(v => `
+            <div class="video-item" onclick="openPlayer('${v.id}')">
+                <div class="thumb-cont"><img src="${v.snippet.thumbnails.high.url}" class="thumb-img"></div>
+                <div class="v-detail">
+                    <div class="v-avatar"><img src="${v.snippet.thumbnails.default.url}"></div>
+                    <div>
+                        <p class="v-title">${v.snippet.title}</p>
+                        <p class="v-meta">${v.snippet.channelTitle} • ${parseInt(v.statistics.viewCount).toLocaleString()}回</p>
                     </div>
-                    <div class="v-detail">
-                        <div class="v-avatar"><img src="${v.snippet.thumbnails.default.url}"></div>
-                        <div>
-                            <p class="v-title">${v.snippet.title}</p>
-                            <p class="v-meta">${v.snippet.channelTitle} • ${parseInt(v.statistics.viewCount).toLocaleString()}回</p>
-                        </div>
-                    </div>
-                </div>`);
-        });
+                </div>
+            </div>`).join('');
     }
 
     async function loadHome() {
-        closePlayer(); closeChannel();
-        // 毎回異なるキーワードで検索してランダム性を出す
+        closePlayer();
+        const mainView = document.getElementById('main-view');
+        mainView.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
+
         const q = keywords[Math.floor(Math.random() * keywords.length)];
-        const vids = await fetchFull(`search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=15&regionCode=JP`);
-        renderList(vids, 'main-view');
+        const vids = await fetchFull(`search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=10&regionCode=JP`);
+        
+        if (vids === "API_LIMIT" || vids === "NETWORK_ERROR") {
+            renderError('main-view');
+        } else {
+            renderList(vids, 'main-view');
+        }
     }
 
     async function openPlayer(id) {
@@ -155,52 +128,24 @@
         pPage.scrollTop = 0;
 
         const vData = await fetchFull(`videos?part=snippet,statistics&id=${id}`);
-        const v = vData[0];
+        if (vData === "API_LIMIT") {
+            renderError('player-page'); // プレイヤー内でもエラーなら表示
+            return;
+        }
         
+        const v = vData[0];
         document.getElementById('p-title').innerText = v.snippet.title;
         document.getElementById('p-views').innerText = parseInt(v.statistics.viewCount).toLocaleString() + " 回視聴";
-        document.getElementById('p-chan-name').innerText = v.snippet.channelTitle;
-        document.getElementById('p-chan-icon').innerHTML = `<img src="${v.snippet.thumbnails.default.url}">`;
-        document.getElementById('p-chan-btn').onclick = () => openChannel(v.snippet.channelId);
-
         document.getElementById('yt-player-cont').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
-
-        const cRes = await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${id}&maxResults=5&key=${KEY}`).then(r => r.json());
-        const cCont = document.getElementById('p-comments');
-        cCont.innerHTML = "";
-        if(cRes.items) {
-            cRes.items.forEach(i => {
-                const s = i.snippet.topLevelComment.snippet;
-                cCont.insertAdjacentHTML('beforeend', `<div style="display:flex; padding:12px; border-bottom:1px solid #eee;"><img src="${s.authorProfileImageUrl}" style="width:28px; height:28px; border-radius:50%; margin-right:10px;"><div style="font-size:13px;"><b>${s.authorDisplayName}</b><div>${s.textDisplay}</div></div></div>`);
-            });
-        }
-
-        const rVids = await fetchFull(`search?part=snippet&type=video&relatedToVideoId=${id}&maxResults=10`);
-        renderList(rVids, 'p-recs');
-    }
-
-    async function openChannel(cId) {
-        const cPage = document.getElementById('channel-page');
-        cPage.style.display = 'block';
-        const cData = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${cId}&key=${KEY}`).then(r => r.json());
-        const c = cData.items[0];
-
-        document.getElementById('c-header-name').innerText = c.snippet.title;
-        document.getElementById('c-name').innerText = c.snippet.title;
-        document.getElementById('c-logo').src = c.snippet.thumbnails.medium.url;
-        document.getElementById('c-sub-count').innerText = "チャンネル登録者数 " + parseInt(c.statistics.subscriberCount).toLocaleString() + "人";
-
-        const vids = await fetchFull(`search?part=snippet&channelId=${cId}&type=video&order=date&maxResults=10`);
-        renderList(vids, 'c-videos-view');
     }
 
     function closePlayer() { document.getElementById('player-page').style.display='none'; document.getElementById('yt-player-cont').innerHTML=''; }
-    function closeChannel() { document.getElementById('channel-page').style.display='none'; }
     function showSearch() { const q = prompt("YouTube 検索"); if(q) execSearch(q); }
     async function execSearch(q) {
-        closePlayer(); closeChannel();
-        const vids = await fetchFull(`search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=15`);
-        renderList(vids, 'main-view');
+        closePlayer();
+        const vids = await fetchFull(`search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=10`);
+        if (vids === "API_LIMIT") renderError('main-view');
+        else renderList(vids, 'main-view');
     }
 
     window.onload = loadHome;
