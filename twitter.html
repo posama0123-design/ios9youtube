@@ -4,52 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="apple-touch-icon" href="image_14fcbc.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <title>Twitter News</title>
+    <title>Twitter</title>
     <style>
-        body { background: #c0deed; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 45px; padding-bottom: 50px; }
+        /* 2012年頃のTwitterブルーを再現 */
+        body { background: #c0deed; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 45px; padding-bottom: 50px; overflow-x: hidden; }
         
+        /* グラデーションヘッダー */
         .header { 
             position: fixed; top: 0; width: 100%; height: 45px; 
             background: linear-gradient(to bottom, #52b7f8 0%, #1da1f2 100%); 
             display: flex; align-items: center; justify-content: space-between; 
             padding: 0 10px; box-sizing: border-box; z-index: 1000; 
-            border-bottom: 1px solid #0e76bc;
+            border-bottom: 1px solid #0e76bc; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .header-title { color: #fff; font-size: 17px; font-weight: bold; text-shadow: 0 -1px 0 rgba(0,0,0,0.3); }
+        .header-title { color: #fff; font-size: 18px; font-weight: bold; text-shadow: 0 -1px 0 rgba(0,0,0,0.3); }
 
+        /* タイムライン */
         .timeline { background: #fff; min-height: 100vh; }
-        .tweet-item { display: flex; padding: 10px; border-bottom: 1px solid #e1e8ed; text-decoration: none; color: inherit; }
+        .tweet-item { 
+            display: flex; padding: 12px 10px; border-bottom: 1px solid #e1e8ed; 
+            text-decoration: none; color: inherit; -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
         .tweet-item:active { background: #f5f8fa; }
 
-        .avatar { width: 42px; height: 42px; border-radius: 6px; background: #1da1f2; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 20px; }
-        .content { flex: 1; overflow: hidden; }
-        .user-row { margin-bottom: 2px; display: flex; align-items: center; }
-        .name { font-weight: bold; font-size: 14px; color: #14171a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* アイコン：ニュースソースごとに色を変える */
+        .avatar { 
+            width: 48px; height: 48px; border-radius: 6px; 
+            background: #1da1f2; margin-right: 10px; flex-shrink: 0; 
+            display: flex; align-items: center; justify-content: center; 
+            color: #fff; font-weight: bold; font-size: 22px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .content { flex: 1; }
+        .user-row { margin-bottom: 2px; }
+        .name { font-weight: bold; font-size: 14px; color: #14171a; }
         .screen-name { color: #657786; font-size: 12px; margin-left: 4px; }
-        .text { font-size: 14px; color: #14171a; line-height: 1.4; }
+        .text { font-size: 14px; color: #14171a; line-height: 1.4; margin-top: 2px; }
 
+        /* アクションアイコン */
+        .actions { display: flex; margin-top: 10px; gap: 35px; color: #aab8c2; }
+        .actions .material-icons-outlined { font-size: 18px; }
+
+        /* ダークなタブバー */
         .tab-bar { 
             position: fixed; bottom: 0; width: 100%; height: 50px; 
             background: linear-gradient(to bottom, #444 0%, #222 100%); 
-            display: flex; border-top: 1px solid #000;
+            display: flex; border-top: 1px solid #000; z-index: 1000;
         }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; font-size: 9px; }
         .tab-item.active { color: #fff; background: rgba(255,255,255,0.1); }
+        .tab-item .material-icons-outlined { font-size: 24px; margin-bottom: 2px; }
+
+        /* 読み込み中アニメーション */
+        .loading { padding: 40px; text-align: center; color: #657786; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <span class="material-icons-outlined" style="color:#fff;">person_outline</span>
-    <div class="header-title">最新ニュース</div>
+    <span class="material-icons-outlined" style="color:#fff;" onclick="location.reload()">person_outline</span>
+    <div class="header-title">ホーム</div>
     <span class="material-icons-outlined" style="color:#fff;" onclick="fetchNews()">refresh</span>
 </div>
 
 <div class="timeline" id="tl">
-    <div style="padding:20px; text-align:center; color:#657786;">読み込み中...</div>
+    <div class="loading">ニュースを取得中...</div>
 </div>
 
 <div class="tab-bar">
@@ -60,9 +84,12 @@
 </div>
 
 <script>
+    // アイコンの背景色をランダムに生成（Twitterっぽさを出すため）
+    const colors = ['#1da1f2', '#19cf86', '#ff8d00', '#794bc4', '#e0245e'];
+
     function fetchNews() {
         const tl = document.getElementById('tl');
-        // RSSをJSONに変換してくれる無料サービスを利用
+        // GoogleニュースのRSSを取得（rss2jsonサービス経由）
         const rssUrl = encodeURIComponent('https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja');
         const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
 
@@ -70,34 +97,35 @@
             .then(res => res.json())
             .then(data => {
                 let html = '';
-                data.items.forEach(item => {
-                    // ニュースソース名をユーザー名に見立てる
+                data.items.forEach((item, index) => {
                     const source = item.author || "News";
+                    const bgColor = colors[index % colors.length];
                     html += `
                         <a href="${item.link}" class="tweet-item" target="_blank">
-                            <div class="avatar">${source.substring(0,1)}</div>
+                            <div class="avatar" style="background:${bgColor}">${source.substring(0,1)}</div>
                             <div class="content">
                                 <div class="user-row">
                                     <span class="name">${source}</span>
-                                    <span class="screen-name">@news_bot</span>
+                                    <span class="screen-name">@news_bot · 今</span>
                                 </div>
                                 <div class="text">${item.title}</div>
-                                <div style="margin-top:8px; color:#aab8c2; font-size:16px;">
-                                    <span class="material-icons-outlined" style="font-size:16px; margin-right:20px;">chat_bubble_outline</span>
-                                    <span class="material-icons-outlined" style="font-size:16px; margin-right:20px;">cached</span>
-                                    <span class="material-icons-outlined" style="font-size:16px;">favorite_border</span>
+                                <div class="actions">
+                                    <span class="material-icons-outlined">chat_bubble_outline</span>
+                                    <span class="material-icons-outlined">autorenew</span>
+                                    <span class="material-icons-outlined">favorite_border</span>
                                 </div>
                             </div>
                         </a>
                     `;
                 });
-                tl.innerHTML = html;
+                tl.innerHTML = html || '<div class="loading">ニュースが見つかりませんでした</div>';
             })
             .catch(err => {
-                tl.innerHTML = '<div style="padding:20px; text-align:center;">読み込みエラー<br>再試行してください</div>';
+                tl.innerHTML = '<div class="loading">読み込みエラーが発生しました。<br>更新ボタンをタップしてください。</div>';
             });
     }
 
+    // 初回読み込み
     window.onload = fetchNews;
 </script>
 
