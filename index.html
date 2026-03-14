@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="youtube-play.jpg?v=2">
+    <link rel="apple-touch-icon" href="youtube-play.jpg?v=3">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <title>YouTube</title>
     <style>
@@ -13,20 +13,24 @@
         .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
         .logo-img { height: 22px; }
         .search-icon { font-size: 24px; color: #030303; }
+        
+        /* 動画リストのレイアウト調整（iOS 9対応） */
         .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; }
         .thumb-cont { width: 100%; position: relative; padding-top: 56.25%; background: #000; }
-        .thumb-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .thumb-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .v-detail { padding: 12px; display: flex; }
-        .v-avatar { width: 36px; height: 36px; border-radius: 50%; margin-right: 12px; background: #eee; overflow: hidden; }
-        .v-avatar img { width: 100%; height: 100%; }
-        .v-title { font-size: 14px; color: #111; font-weight: bold; margin: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .v-avatar { width: 36px; height: 36px; border-radius: 18px; margin-right: 12px; background: #eee; flex-shrink: 0; }
+        .v-title { font-size: 14px; color: #111; font-weight: bold; margin: 0; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .v-meta { font-size: 12px; color: #606060; margin-top: 4px; }
-        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; text-align: center; }
-        .error-icon { width: 80px; height: 80px; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; position: relative; }
-        .error-icon:after { content: "!"; font-size: 45px; color: #fff; font-weight: bold; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* エラー画面の再現（image_16cecc.png風） */
+        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 20px; text-align: center; }
+        .error-icon { width: 80px; height: 80px; background: #e0e0e0; border-radius: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; position: relative; }
+        .error-icon:after { content: "!"; font-size: 45px; color: #fff; font-weight: bold; position: absolute; top: 50%; left: 50%; margin-top: -25px; margin-left: -7px; }
+
+        /* タブバー */
         .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 3000; }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #606060; font-size: 10px; }
-        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 2000; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -38,76 +42,59 @@
 
 <div id="main-view"></div>
 
-<div id="player-page" class="full-page">
-    <div id="yt-player-cont" style="width:100%; aspect-ratio:16/9; background:#000;"></div>
-    <div style="padding:15px;"><p id="p-title" style="font-size:16px; font-weight:bold;"></p></div>
-    <div style="padding:20px; text-align:center; color:#888;" onclick="closePlayer()">✕ 閉じる</div>
-</div>
-
-<div class="tab-bar">
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">local_fire_department</span><span>急上昇</span></div>
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">video_library</span><span>ライブラリ</span></div>
-</div>
-
 <script>
-    // iOS 9でも動く古い書き方に変更
-    var KEY = 'AIzaSyA46GQprT1Cc0kmqLGHYn2fqHMspIxzRlE';
-    var keywords = ['ゲーム実況', 'Fortnite', 'ゆっくり実況'];
+    // 提供された新しいAPIキーをセット
+    var KEY = 'AIzaSyCDseE0EZTBBzTz-6oDac7QENwW9M0zOyw';
+    var keywords = ['ゲーム実況', 'Minecraft', 'ゆっくり実況'];
 
-    function renderError(targetId) {
-        document.getElementById(targetId).innerHTML = '<div class="error-container" onclick="location.reload()"><div class="error-icon"></div><div style="font-size:20px;color:#666;margin-top:20px;">読み込みエラー</div><div style="color:#999;">タップして再試行</div></div>';
+    function renderError() {
+        var main = document.getElementById('main-view');
+        main.innerHTML = '<div class="error-container" onclick="location.reload()">' +
+            '<div class="error-icon"></div>' +
+            '<div style="font-size:20px; color:#666; margin-top:20px;">読み込みエラー</div>' +
+            '<div style="color:#999; margin-top:8px;">再試行するにはタップしてください</div>' +
+        '</div>';
     }
 
-    // fetchが使えない可能性に備えてXMLHttpRequestを使用
-    function ajaxGet(url, callback) {
+    // 古いSafariでも確実に動く通信方式（XMLHttpRequest）
+    function loadHome() {
+        var mainView = document.getElementById('main-view');
+        mainView.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
+
+        var q = keywords[Math.floor(Math.random() * keywords.length)];
+        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(q) + '&type=video&maxResults=10&key=' + KEY;
+
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    callback(JSON.parse(xhr.responseText));
+                    var data = JSON.parse(xhr.responseText);
+                    var html = '';
+                    for (var i = 0; i < data.items.length; i++) {
+                        var v = data.items[i];
+                        html += '<div class="video-item">' +
+                                '<div class="thumb-cont"><img src="' + v.snippet.thumbnails.high.url + '" class="thumb-img" style="width:100%;"></div>' +
+                                '<div class="v-detail"><div class="v-avatar"></div><div>' +
+                                '<p class="v-title">' + v.snippet.title + '</p>' +
+                                '<p class="v-meta">' + v.snippet.channelTitle + '</p></div></div></div>';
+                    }
+                    mainView.innerHTML = html;
                 } else {
-                    callback("ERROR");
+                    // API上限やエラー時にあの画面を出す
+                    renderError();
                 }
             }
         };
         xhr.send();
     }
 
-    function loadHome() {
-        var main = document.getElementById('main-view');
-        main.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
-        
-        var q = keywords[Math.floor(Math.random() * keywords.length)];
-        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(q) + '&type=video&maxResults=10&key=' + KEY;
-        
-        ajaxGet(url, function(data) {
-            if (data === "ERROR" || data.error) {
-                renderError('main-view');
-            } else {
-                var html = '';
-                for (var i = 0; i < data.items.length; i++) {
-                    var v = data.items[i];
-                    html += '<div class="video-item" onclick="openPlayer(\'' + v.id.videoId + '\')">' +
-                            '<div class="thumb-cont"><img src="' + v.snippet.thumbnails.high.url + '" class="thumb-img"></div>' +
-                            '<div class="v-detail"><div class="v-avatar"></div><div>' +
-                            '<p class="v-title">' + v.snippet.title + '</p>' +
-                            '<p class="v-meta">' + v.snippet.channelTitle + '</p></div></div></div>';
-                }
-                main.innerHTML = html;
-            }
-        });
-    }
-
-    function openPlayer(id) {
-        document.getElementById('player-page').style.display = 'block';
-        document.getElementById('yt-player-cont').innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>';
-    }
-
-    function closePlayer() {
-        document.getElementById('player-page').style.display = 'none';
-        document.getElementById('yt-player-cont').innerHTML = '';
+    function showSearch() {
+        var q = prompt("YouTube 検索");
+        if(q) {
+            // 検索処理も同様に実装可能ですが、まずはホームの表示を優先
+            location.href = "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+        }
     }
 
     window.onload = loadHome;
