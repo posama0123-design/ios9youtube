@@ -10,91 +10,110 @@
     <title>YouTube</title>
     <style>
         body { background: #f1f1f1; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 52px; padding-bottom: 50px; }
-        .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
+        .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 10000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
         .logo-img { height: 22px; }
-        .search-icon { font-size: 24px; color: #030303; }
         
-        /* 動画リストのレイアウト調整（iOS 9対応） */
+        /* 動画リスト */
         .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; }
         .thumb-cont { width: 100%; position: relative; padding-top: 56.25%; background: #000; }
         .thumb-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .v-detail { padding: 12px; display: flex; }
         .v-avatar { width: 36px; height: 36px; border-radius: 18px; margin-right: 12px; background: #eee; flex-shrink: 0; }
-        .v-title { font-size: 14px; color: #111; font-weight: bold; margin: 0; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .v-meta { font-size: 12px; color: #606060; margin-top: 4px; }
+        .v-title { font-size: 14px; color: #111; font-weight: bold; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* プレイヤーページ */
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 20000; overflow-y: auto; }
+        .player-header { padding: 12px; border-bottom: 1px solid #eee; }
+        
+        /* アクションボタン（高評価など） */
+        .action-bar { display: flex; justify-content: space-around; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .action-btn { display: flex; flex-direction: column; align-items: center; color: #606060; font-size: 10px; text-decoration: none; }
+        .action-btn .material-icons-outlined { font-size: 22px; margin-bottom: 4px; }
 
-        /* エラー画面の再現（image_16cecc.png風） */
-        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 20px; text-align: center; }
-        .error-icon { width: 80px; height: 80px; background: #e0e0e0; border-radius: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; position: relative; }
-        .error-icon:after { content: "!"; font-size: 45px; color: #fff; font-weight: bold; position: absolute; top: 50%; left: 50%; margin-top: -25px; margin-left: -7px; }
-
-        /* タブバー */
-        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 3000; }
-        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #606060; font-size: 10px; }
+        /* タブバー（復活版） */
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 30000; }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #606060; font-size: 10px; text-decoration: none; }
+        .tab-item .material-icons-outlined { font-size: 24px; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div onclick="location.reload()"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img"></div>
-    <span class="material-icons-outlined search-icon" onclick="showSearch()">search</span>
+    <span class="material-icons-outlined" style="font-size:24px;">search</span>
 </div>
 
 <div id="main-view"></div>
 
+<div id="player-page" class="full-page">
+    <div id="yt-player-cont" style="width:100%; aspect-ratio:16/9; background:#000;"></div>
+    <div class="player-header">
+        <p id="p-title" style="font-size:16px; font-weight:bold; margin:0;"></p>
+        <p id="p-views" style="font-size:12px; color:#606060; margin-top:5px;"></p>
+    </div>
+    
+    <div class="action-bar">
+        <div class="action-btn"><span class="material-icons-outlined">thumb_up</span><span id="p-likes">高評価</span></div>
+        <div class="action-btn"><span class="material-icons-outlined">thumb_down</span><span>低評価</span></div>
+        <div class="action-btn"><span class="material-icons-outlined">reply</span><span>共有</span></div>
+        <div class="action-btn"><span class="material-icons-outlined">file_download</span><span>オフライン</span></div>
+        <div class="action-btn"><span class="material-icons-outlined">playlist_add</span><span>保存</span></div>
+    </div>
+
+    <div style="padding:20px; text-align:center; color:#065fd4; font-weight:bold;" onclick="closePlayer()">✕ 動画を閉じる</div>
+</div>
+
+<div class="tab-bar">
+    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
+    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">local_fire_department</span><span>急上昇</span></div>
+    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">video_library</span><span>ライブラリ</span></div>
+</div>
+
 <script>
-    // 提供された新しいAPIキーをセット
     var KEY = 'AIzaSyCDseE0EZTBBzTz-6oDac7QENwW9M0zOyw';
-    var keywords = ['ゲーム実況', 'Minecraft', 'ゆっくり実況'];
+    var keywords = ['ゲーム実況', 'ゆっくり実況', 'Fortnite'];
 
-    function renderError() {
-        var main = document.getElementById('main-view');
-        main.innerHTML = '<div class="error-container" onclick="location.reload()">' +
-            '<div class="error-icon"></div>' +
-            '<div style="font-size:20px; color:#666; margin-top:20px;">読み込みエラー</div>' +
-            '<div style="color:#999; margin-top:8px;">再試行するにはタップしてください</div>' +
-        '</div>';
-    }
-
-    // 古いSafariでも確実に動く通信方式（XMLHttpRequest）
-    function loadHome() {
-        var mainView = document.getElementById('main-view');
-        mainView.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
-
-        var q = keywords[Math.floor(Math.random() * keywords.length)];
-        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(q) + '&type=video&maxResults=10&key=' + KEY;
-
+    function ajaxGet(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    var html = '';
-                    for (var i = 0; i < data.items.length; i++) {
-                        var v = data.items[i];
-                        html += '<div class="video-item">' +
-                                '<div class="thumb-cont"><img src="' + v.snippet.thumbnails.high.url + '" class="thumb-img" style="width:100%;"></div>' +
-                                '<div class="v-detail"><div class="v-avatar"></div><div>' +
-                                '<p class="v-title">' + v.snippet.title + '</p>' +
-                                '<p class="v-meta">' + v.snippet.channelTitle + '</p></div></div></div>';
-                    }
-                    mainView.innerHTML = html;
-                } else {
-                    // API上限やエラー時にあの画面を出す
-                    renderError();
-                }
-            }
+            if (xhr.readyState === 4 && xhr.status === 200) { callback(JSON.parse(xhr.responseText)); }
+            else if (xhr.readyState === 4) { callback("ERROR"); }
         };
         xhr.send();
     }
 
-    function showSearch() {
-        var q = prompt("YouTube 検索");
-        if(q) {
-            // 検索処理も同様に実装可能ですが、まずはホームの表示を優先
-            location.href = "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
-        }
+    function loadHome() {
+        var main = document.getElementById('main-view');
+        main.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
+        var q = keywords[Math.floor(Math.random() * keywords.length)];
+        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(q) + '&type=video&maxResults=10&key=' + KEY;
+        
+        ajaxGet(url, function(data) {
+            if (data === "ERROR") { main.innerHTML = "読み込みエラー"; return; }
+            var html = '';
+            for (var i = 0; i < data.items.length; i++) {
+                var v = data.items[i];
+                html += '<div class="video-item" onclick="openPlayer(\'' + v.id.videoId + '\', \'' + v.snippet.title.replace(/'/g, "") + '\')">' +
+                        '<div class="thumb-cont"><img src="' + v.snippet.thumbnails.high.url + '" class="thumb-img"></div>' +
+                        '<div class="v-detail"><div class="v-avatar"></div><div>' +
+                        '<p class="v-title">' + v.snippet.title + '</p>' +
+                        '<p style="font-size:12px; color:#606060; margin-top:4px;">' + v.snippet.channelTitle + '</p></div></div></div>';
+            }
+            main.innerHTML = html;
+        });
+    }
+
+    function openPlayer(id, title) {
+        document.getElementById('player-page').style.display = 'block';
+        document.getElementById('p-title').innerText = title;
+        document.getElementById('p-views').innerText = "1.2万回視聴 • 2026/03/14"; // ダミーデータ
+        document.getElementById('yt-player-cont').innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>';
+    }
+
+    function closePlayer() {
+        document.getElementById('player-page').style.display = 'none';
+        document.getElementById('yt-player-cont').innerHTML = '';
     }
 
     window.onload = loadHome;
