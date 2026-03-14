@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="image_14fcbc.png?v=final_fix">
+    <link rel="apple-touch-icon" href="image_14fcbc.png?v=fixed_final">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <title>YouTube</title>
     <style>
@@ -38,6 +38,7 @@
     <div style="padding:20px; text-align:center; background:#fafafa; border-bottom:1px solid #eee;">
         <div style="width:60px; height:60px; border-radius:30px; background:#ccc; margin:0 auto 10px;"></div>
         <h2 id="ch-name" style="margin:0; font-size:18px;"></h2>
+        <div style="background:#cc0000; color:#fff; padding:6px 15px; border-radius:2px; display:inline-block; margin-top:10px; font-size:13px; font-weight:bold;">登録済み</div>
     </div>
     <div id="ch-video-list"></div>
     <div style="padding:25px; text-align:center; color:#065fd4; font-weight:bold;" onclick="closeChannel()">✕ 戻る</div>
@@ -61,8 +62,8 @@
 
 <div class="tab-bar">
     <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
-    <div class="tab-item" onclick="loadKeyword('ゆっくり実況')"><span class="material-icons-outlined">videogame_asset</span><span>ゆっくり</span></div>
-    <div class="tab-item" onclick="closePlayer(); closeChannel();"><span class="material-icons-outlined">subscriptions</span><span>登録</span></div>
+    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">local_fire_department</span><span>人気</span></div>
+    <div class="tab-item" onclick="closePlayer(); closeChannel();"><span class="material-icons-outlined">subscriptions</span><span>登録済</span></div>
 </div>
 
 <script>
@@ -77,23 +78,20 @@
         xhr.send();
     }
 
-    // 💡 本当の節約：videosAPI(1点)を使いつつ、カテゴリを変えてマンネリ防止
     function loadHome() {
-        var categories = ['1', '20', '10', '17']; // 映画、ゲーム、音楽、スポーツ
-        var cat = categories[Math.floor(Math.random() * categories.length)];
+        // 1点消費：ランダムにカテゴリを変えて「同じ動画バグ」を防止
+        var cats = ['1', '20', '10', '17', '24']; 
+        var cat = cats[Math.floor(Math.random() * cats.length)];
         var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=JP&videoCategoryId='+cat+'&maxResults=10&key=' + KEY;
         renderList(url, 'main-view', true);
     }
 
-    // 💡 好きなキーワード専用ボタン（これのみ100点消費、でも1回で10件取れる）
-    function loadKeyword(word) {
-        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(word)+'&type=video&maxResults=10&key='+KEY;
-        renderList(url, 'main-view', false);
-    }
-
     function doSearch() {
         var q = prompt("YouTube 検索");
-        if (q) loadKeyword(q);
+        if (q) {
+            var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(q)+'&type=video&maxResults=10&key='+KEY;
+            renderList(url, 'main-view', false);
+        }
     }
 
     function renderList(url, targetId, isVideoAPI) {
@@ -129,9 +127,8 @@
             '<div onclick="openChannel(\''+chId+'\',\''+chName+'\')"><p style="margin:0; font-size:14px; font-weight:bold;">'+chName+'</p></div>';
         document.getElementById('yt-player-cont').innerHTML = '<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>';
         
-        // コメント(1点)
-        var cmtUrl = 'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId='+id+'&maxResults=5&key='+KEY;
-        ajaxGet(cmtUrl, function(data) {
+        // コメント取得(1点)
+        ajaxGet('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId='+id+'&maxResults=5&key='+KEY, function(data) {
             var html = '';
             if(data.items) {
                 for (var i = 0; i < data.items.length; i++) {
@@ -142,7 +139,7 @@
             document.getElementById('real-comments').innerHTML = html;
         });
 
-        // 💡 プレイヤー下の「次」はAPIを叩かず、今のリストを再表示（究極の節約）
+        // 究極の節約：今のリストを再利用（0点）
         document.getElementById('next-videos-list').innerHTML = document.getElementById('main-view').innerHTML;
     }
 
