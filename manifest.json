@@ -9,7 +9,8 @@
     {
       "src": "youtube-play.jpg",
       "sizes": "1024x1024",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
   ]
 }
