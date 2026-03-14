@@ -11,21 +11,20 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <title>Twitter</title>
     <style>
-        body { background: #fff; font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 45px; padding-bottom: 50px; overflow-x: hidden; }
+        body { background: #fff; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 45px; padding-bottom: 50px; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
         .header { position: fixed; top: 0; width: 100%; height: 45px; background: #fff; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; z-index: 1000; border-bottom: 0.5px solid #bdc3c7; }
         .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: bold; color: #14171a; }
         .search-container { padding: 8px 10px; background: #f5f8fa; border-bottom: 0.5px solid #e1e8ed; display: none; }
-        .search-container.active { display: block; }
         .search-box { background: #e1e8ed; border-radius: 5px; height: 30px; display: flex; align-items: center; padding: 0 8px; }
         .search-box input { background: transparent; border: none; width: 100%; outline: none; font-size: 14px; color: #14171a; }
-        .tweet-item { display: flex; padding: 12px; border-bottom: 0.5px solid #e1e8ed; text-decoration: none; color: inherit; -webkit-tap-highlight-color: rgba(0,0,0,0.05); }
-        .avatar { width: 42px; height: 42px; border-radius: 5px; background: #1da1f2; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 18px; }
-        .content { flex: 1; overflow: hidden; }
-        .name { font-weight: bold; font-size: 14px; color: #14171a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tweet-item { display: block; padding: 12px; border-bottom: 0.5px solid #e1e8ed; text-decoration: none; color: inherit; overflow: hidden; }
+        .avatar { width: 42px; height: 42px; border-radius: 5px; background: #1da1f2; float: left; margin-right: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 18px; }
+        .content { overflow: hidden; }
+        .name { font-weight: bold; font-size: 14px; color: #14171a; }
         .screen-name { color: #657786; font-size: 13px; }
         .text { font-size: 14px; color: #14171a; line-height: 1.3; margin-top: 2px; }
         .actions { display: flex; margin-top: 10px; justify-content: space-between; max-width: 200px; color: #8899a6; }
-        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: rgba(255,255,255,0.98); display: flex; border-top: 0.5px solid #bdc3c7; z-index: 1000; }
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 50px; background: #fff; display: flex; border-top: 0.5px solid #bdc3c7; z-index: 1000; }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8899a6; font-size: 10px; text-decoration: none; }
         .tab-item.active { color: #1da1f2; }
     </style>
@@ -40,76 +39,94 @@
 
 <div class="search-container" id="search-section">
     <div class="search-box">
-        <span class="material-icons-outlined" style="font-size:18px; margin-right:5px; color:#657786;">search</span>
-        <input type="text" id="search-input" placeholder="キーワード検索" onkeypress="if(event.key==='Enter'){fetchNews(this.value); this.blur();}">
+        <input type="text" id="search-input" placeholder="検索ワードを入力して決定" onkeypress="if(event.keyCode===13){fetchNews(this.value); this.blur();}">
     </div>
 </div>
 
 <div id="tl"></div>
 
 <div class="tab-bar">
-    <div class="tab-item active" onclick="switchTab('home')"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
-    <div class="tab-item" onclick="switchTab('search')"><span class="material-icons-outlined">search</span><span>検索</span></div>
-    <div class="tab-item" onclick="switchTab('mail')"><span class="material-icons-outlined">mail</span><span>メッセージ</span></div>
-    <div class="tab-item" onclick="switchTab('profile')"><span class="material-icons-outlined">person</span><span>プロフィール</span></div>
+    <div id="tab-home" class="tab-item active" onclick="switchTab('home')"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
+    <div id="tab-search" class="tab-item" onclick="switchTab('search')"><span class="material-icons-outlined">search</span><span>検索</span></div>
+    <div id="tab-mail" class="tab-item" onclick="switchTab('mail')"><span class="material-icons-outlined">mail</span><span>メッセージ</span></div>
+    <div id="tab-person" class="tab-item" onclick="switchTab('person')"><span class="material-icons-outlined">person</span><span>プロフィール</span></div>
 </div>
 
 <script>
+    // iOS 9Safariは「=>」や「let/const」を理解できないため、すべて「function」と「var」で記述
+    function fetchNews(query) {
+        var searchQuery = query || '';
+        var tl = document.getElementById('tl');
+        tl.innerHTML = '<div style="padding:40px; text-align:center; color:#657786;">読み込み中...</div>';
+
+        // プロキシ経由でRSSを取得
+        var rssUrl = encodeURIComponent('https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja' + (searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''));
+        var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + rssUrl;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', apiUrl, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var items = data.items;
+                    var html = '';
+                    
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        var sourceName = "News";
+                        var parts = item.title.split(' - ');
+                        if (parts.length > 1) {
+                            sourceName = parts.pop();
+                        }
+                        var titleText = parts.join(' - ');
+
+                        // 文字列連結を「+」で行う（iOS 9の安全策）
+                        html += '<a href="' + item.link + '" class="tweet-item" target="_blank">' +
+                                '<div class="avatar">' + sourceName.substring(0,1) + '</div>' +
+                                '<div class="content">' +
+                                '<div class="user-row"><span class="name">' + sourceName + '</span> <span class="screen-name"> @news_bot</span></div>' +
+                                '<div class="text">' + titleText + '</div>' +
+                                '<div class="actions">' +
+                                '<span class="material-icons-outlined" style="font-size:18px;">chat_bubble_outline</span>' +
+                                '<span class="material-icons-outlined" style="font-size:18px;">autorenew</span>' +
+                                '<span class="material-icons-outlined" style="font-size:18px;">favorite_border</span>' +
+                                '</div></div></a>';
+                    }
+                    tl.innerHTML = html;
+                } else {
+                    tl.innerHTML = '<div style="padding:20px; text-align:center; color:red;">エラーが発生しました<br>通信環境を確認してください</div>';
+                }
+            }
+        };
+        xhr.send();
+    }
+
     function switchTab(type) {
-        const tabs = document.querySelectorAll('.tab-item');
-        tabs.forEach(t => t.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        const searchSection = document.getElementById('search-section');
-        const pageTitle = document.getElementById('page-title');
+        // activeクラスの切り替え
+        var tabs = ['home', 'search', 'mail', 'person'];
+        for (var j = 0; j < tabs.length; j++) {
+            document.getElementById('tab-' + tabs[j]).className = 'tab-item';
+        }
+        var currentTabId = (type === 'home' || type === 'search' || type === 'mail' || type === 'person') ? 'tab-' + type : 'tab-home';
+        document.getElementById(currentTabId).className = 'tab-item active';
+
+        var searchSection = document.getElementById('search-section');
+        var pageTitle = document.getElementById('page-title');
+
         if (type === 'search') {
-            searchSection.classList.add('active');
+            searchSection.style.display = 'block';
             pageTitle.innerText = '検索';
-            document.getElementById('search-input').focus();
         } else {
-            searchSection.classList.remove('active');
-            pageTitle.innerText = type === 'home' ? 'ホーム' : type === 'mail' ? 'メッセージ' : 'プロフィール';
+            searchSection.style.display = 'none';
+            pageTitle.innerText = (type === 'home' ? 'ホーム' : (type === 'mail' ? 'メッセージ' : 'プロフィール'));
             if (type === 'home') fetchNews('');
         }
     }
 
-    function fetchNews(query = '') {
-        const tl = document.getElementById('tl');
-        tl.innerHTML = '<div style="padding:40px; text-align:center; color:#657786;">読み込み中...</div>';
-        const rssUrl = encodeURIComponent(`https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja${query ? '&q='+encodeURIComponent(query) : ''}`);
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
-
-        fetch(apiUrl)
-            .then(res => res.json())
-            .then(data => {
-                let html = '';
-                data.items.forEach(item => {
-                    // タイトルの末尾にある「 - ニュースサイト名」を切り出す
-                    let sourceName = "News";
-                    const parts = item.title.split(' - ');
-                    if (parts.length > 1) {
-                        sourceName = parts.pop(); // 一番最後の要素を取得
-                    }
-                    
-                    html += `
-                        <a href="${item.link}" class="tweet-item" target="_blank">
-                            <div class="avatar">${sourceName.substring(0,1)}</div>
-                            <div class="content">
-                                <div class="user-row"><span class="name">${sourceName}</span> <span class="screen-name">@news_bot</span></div>
-                                <div class="text">${parts.join(' - ')}</div>
-                                <div class="actions">
-                                    <span class="material-icons-outlined">chat_bubble_outline</span>
-                                    <span class="material-icons-outlined">autorenew</span>
-                                    <span class="material-icons-outlined">favorite_border</span>
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                });
-                tl.innerHTML = html || '<div style="padding:20px; text-align:center;">なし</div>';
-                window.scrollTo(0,0);
-            });
-    }
-    window.onload = () => fetchNews();
+    window.onload = function() {
+        fetchNews('');
+    };
 </script>
 </body>
 </html>
