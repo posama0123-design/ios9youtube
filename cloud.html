@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="ico.ico">
+    <title>クラウドメモ</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { background: #fdf6e3; color: #657b83; font-family: "Helvetica Neue", sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* ヘッダー（iOS 9風） */
+        .header { height: 44px; background: #eee8d5; border-bottom: 0.5px solid #93a1a1; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        
+        /* メモエリア */
+        .memo-container { flex: 1; padding: 15px; display: flex; flex-direction: column; }
+        #memo-input { 
+            flex: 1; 
+            width: 100%; 
+            border: none; 
+            background: transparent; 
+            font-size: 18px; 
+            line-height: 1.6; 
+            resize: none; 
+            outline: none; 
+            color: #073642;
+            font-family: inherit;
+        }
+
+        /* ツールバー */
+        .toolbar { 
+            height: 50px; 
+            background: #eee8d5; 
+            border-top: 0.5px solid #93a1a1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-around; 
+            padding: 0 10px;
+        }
+        .btn { color: #268bd2; font-weight: bold; cursor: pointer; font-size: 16px; border: none; background: none; }
+        .status { font-size: 10px; color: #93a1a1; }
+    </style>
+</head>
+<body>
+
+<div class="header">クラウドメモ</div>
+
+<div class="memo-container">
+    <textarea id="memo-input" placeholder="ここに文字を書くと他の端末に同期されます..."></textarea>
+</div>
+
+<div class="toolbar">
+    <button class="btn" onclick="clearMemo()">全消去</button>
+    <div id="status" class="status">同期中...</div>
+    <button class="btn" onclick="copyMemo()">コピー</button>
+</div>
+
+<script>
+    // --- Firebase設定（提供された情報を適用） ---
+    var firebaseConfig = {
+        apiKey: "AIzaSyCAq7RfWRTYScs4cCVcnkRdmy5lSsuHYgU",
+        databaseURL: "https://my-chatapp-7a4db-default-rtdb.firebaseio.com",
+        projectId: "my-chatapp-7a4db"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.database();
+    var memoRef = db.ref('shared_memo');
+
+    var memoInput = document.getElementById('memo-input');
+    var statusText = document.getElementById('status');
+    var isTyping = false;
+
+    // 1. サーバーから最新のメモを取得して表示
+    memoRef.on('value', function(snapshot) {
+        if (!isTyping) {
+            memoInput.value = snapshot.val() || "";
+            statusText.innerText = "同期完了";
+        }
+    });
+
+    // 2. 入力されたらサーバーに飛ばす
+    memoInput.addEventListener('input', function() {
+        isTyping = true;
+        statusText.innerText = "書き込み中...";
+        memoRef.set(memoInput.value, function(error) {
+            if (!error) {
+                statusText.innerText = "保存済み";
+                // 3秒後に「同期中」に戻す
+                setTimeout(function() { isTyping = false; }, 3000);
+            }
+        });
+    });
+
+    // 消去機能
+    function clearMemo() {
+        if (confirm("メモを空にしますか？")) {
+            memoRef.set("");
+        }
+    }
+
+    // コピー機能（iPhone 4sでも動く簡易版）
+    function copyMemo() {
+        memoInput.select();
+        document.execCommand('copy');
+        alert("コピーしました！");
+    }
+</script>
+</body>
+</html>
