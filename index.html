@@ -40,20 +40,25 @@
             width: 60px;
             height: 60px;
             border-radius: 12px;
+            /* 背景色はアイコン画像が透過だった場合の予備 */
             background: #333;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             margin-bottom: 8px;
             border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden; /* 画像がはみ出ないように */
         }
 
-        /* アプリごとの色設定 */
-        .yt-color { background: linear-gradient(135deg, #ff0000, #cc0000); }
-        .tw-color { background: linear-gradient(135deg, #1DA1F2, #0d8bd9); }
-        .ic-color { background: linear-gradient(135deg, #fff, #e0e0e0); color: #000; }
+        /* アイコン画像のスタイル */
+        .app-icon-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 画像をボックスにフィットさせる */
+        }
+
+        /* アプリごとの色設定（画像がない場合のフォールバック用） */
         .st-color { background: linear-gradient(135deg, #8e8e93, #636366); }
 
         .app-label {
@@ -74,17 +79,23 @@
 
 <div class="app-grid">
     <a href="old.html" class="app-item">
-        <div class="app-icon-box yt-color">📺</div>
+        <div class="app-icon-box">
+            <img src="image_14fcbc.png" alt="YouTube" class="app-icon-img">
+        </div>
         <span class="app-label">YouTube</span>
     </a>
 
     <a href="twitter.html" class="app-item">
-        <div class="app-icon-box tw-color">🐦</div>
+        <div class="app-icon-box">
+            <img src="twitter_image.png" alt="Twitter" class="app-icon-img">
+        </div>
         <span class="app-label">Twitter</span>
     </a>
 
     <a href="cloud.html" class="app-item">
-        <div class="app-icon-box ic-color">☁️</div>
+        <div class="app-icon-box">
+            <img src="cloud.png" alt="iCloud" class="app-icon-img">
+        </div>
         <span class="app-label">iCloud</span>
     </a>
 
