@@ -5,167 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gemini iOS</title>
     <style>
-        /* --- iOS 9 互換：ベーススタイル --- */
-        body { 
-            background-color: #000; 
-            color: #fff; 
-            font-family: -apple-system, Helvetica, sans-serif; /* iOS標準フォント */
-            margin: 0; 
-            padding: 0; 
-            height: 100vh;
-            overflow: hidden; /* スクロールはチャットボックスのみ */
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- ヘッダー（iOS 9風グラデーション） --- */
-        #header {
-            height: 44px; /* iOS標準ヘッダー高さ */
-            background: linear-gradient(#202020, #000); /* 少し立体感 */
-            border-bottom: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 17px;
-            color: #fff;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 100;
-        }
-
-        /* --- チャットエリア（Geminiアプリ風ブラックUI） --- */
-        #chat-box { 
-            flex: 1;
-            overflow-y: scroll; /* 古いiOS向けのスクロール */
-            -webkit-overflow-scrolling: touch; /* 指に追従するスクロール */
-            padding: 10px;
-            padding-top: 54px; /* ヘッダー分 */
-            padding-bottom: 60px; /* 入力欄分 */
-        }
-
-        /* --- メッセージバブル（Gemini風） --- */
-        .message {
-            display: flex;
-            margin-bottom: 15px;
-            max-width: 85%;
-        }
-
-        /* ユーザーメッセージ（右側、緑） */
-        .user {
-            justify-content: flex-end;
-            margin-left: auto;
-        }
-        .user .bubble {
-            background-color: #21ba45; /* Gemini iOSのユーザーカラー */
-            border-radius: 18px 18px 0 18px; /* 角丸の調整 */
-            padding: 10px 15px;
-            color: white;
-            font-size: 15px;
-            line-height: 1.4;
-        }
-
-        /* AIメッセージ（左側、ブラック） */
-        .ai {
-            justify-content: flex-start;
-        }
-        .ai .bubble {
-            background-color: #1a1a1a; /* Geminiアプリ風のブラック */
-            border: 1px solid #333;
-            border-radius: 18px 18px 18px 0;
-            padding: 10px 15px;
-            color: #ececec;
-            font-size: 15px;
-            line-height: 1.4;
-        }
-
-        /* --- 入力エリア（iOS 9風固定バー） --- */
-        #input-area {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 50px;
-            background: linear-gradient(#2a2a2a, #111);
-            border-top: 1px solid #333;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            box-sizing: border-box;
-            z-index: 100;
-        }
-
-        #userInput { 
-            flex: 1;
-            height: 36px;
-            border-radius: 18px; /* 丸い入力欄 */
-            border: 1px solid #444;
-            background-color: #0c0c0c;
-            color: #fff;
-            padding: 0 15px;
-            font-size: 16px; /* iOSでズームさせないためのサイズ */
-            -webkit-appearance: none; /* iOS標準の影を消す */
-        }
-
-        /* 送信ボタン（Gemini風アイコン付き） */
-        #sendBtn { 
-            width: 44px;
-            height: 36px;
-            background-color: #333; /* デフォルトは暗く */
-            color: #aaa;
-            border: none;
-            border-radius: 18px;
-            margin-left: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            line-height: 36px;
-            text-align: center;
-            cursor: pointer;
-            -webkit-appearance: none;
-        }
-        /* 入力があったらボタンの色を青に（CSSで再現） */
-        #userInput:not(:placeholder-shown) + #sendBtn {
-            background-color: #0a84ff; /* iOS標準の青 */
-            color: #fff;
-        }
-
+        /* 前回のデザインを維持（iOS 9最適化） */
+        body { background-color: #000; color: #fff; font-family: -apple-system, Helvetica, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        #header { height: 44px; background: linear-gradient(#202020, #000); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 17px; position: fixed; top: 0; width: 100%; z-index: 100; }
+        #chat-box { flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 10px; padding-top: 54px; padding-bottom: 60px; }
+        .message { display: flex; margin-bottom: 15px; max-width: 85%; }
+        .user { justify-content: flex-end; margin-left: auto; }
+        .user .bubble { background-color: #21ba45; border-radius: 18px 18px 0 18px; padding: 10px 15px; color: white; font-size: 15px; }
+        .ai { justify-content: flex-start; }
+        .ai .bubble { background-color: #1a1a1a; border: 1px solid #333; border-radius: 18px 18px 18px 0; padding: 10px 15px; color: #ececec; font-size: 15px; }
+        #input-area { position: fixed; bottom: 0; width: 100%; height: 50px; background: #111; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; }
+        #userInput { flex: 1; height: 36px; border-radius: 18px; border: 1px solid #444; background: #0c0c0c; color: #fff; padding: 0 15px; font-size: 16px; }
+        #sendBtn { width: 44px; height: 36px; background: #333; color: #aaa; border: none; border-radius: 18px; margin-left: 10px; font-size: 20px; }
+        #userInput:not(:placeholder-shown) + #sendBtn { background: #0a84ff; color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="header">Gemini</div>
-    
     <div id="chat-box">
-        <div class="message ai">
-            <div class="bubble">こんにちは。どのようなご用件でしょうか？</div>
-        </div>
+        <div class="message ai"><div class="bubble">準備完了です。PCやiPhone 4Sから話しかけてみてください！</div></div>
     </div>
     
     <div id="input-area">
         <input type="text" id="userInput" placeholder="メッセージを入力...">
-        <button id="sendBtn" onclick="sendMessage()">↑</button> </div>
+        <button id="sendBtn" onclick="sendMessage()">↑</button>
+    </div>
 
     <script>
-        // --- 設定 ---
+        // --- ここにあなたのAPIキーを入れてください ---
         var apiKey = "AIzaSyAlBitznJc-qpRCq-FBY0HCW_egVyMjGR0";
-        // モデル名を確実に 'v1' に修正
-        var url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        
+        // URLの末尾に「:generateContent」があるか、余計なスペースがないか厳重チェック
+        var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
 
         var chatBox = document.getElementById("chat-box");
         var userInput = document.getElementById("userInput");
 
-        // --- 送信関数 ---
         function sendMessage() {
             var text = userInput.value;
             if (!text) return;
 
-            // ユーザーのメッセージを表示
-            chatBox.innerHTML += '<div class="message user"><div class="bubble">' + escapeHtml(text) + '</div></div>';
+            chatBox.innerHTML += '<div class="message user"><div class="bubble">' + text + '</div></div>';
             userInput.value = "";
-            userInput.blur(); // キーボードを閉じる（4Sの画面が狭いため）
             scrollToBottom();
 
-            // 古いブラウザ用の XMLHttpRequest
             var xhr = new XMLHttpRequest();
             xhr.open("POST", url, true);
             xhr.setRequestHeader("Content-Type", "application/json");
@@ -174,54 +58,36 @@
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         var response = JSON.parse(xhr.responseText);
-                        var aiText = response.candidates[0].content.parts[0].text;
-                        // AIのメッセージを表示
-                        chatBox.innerHTML += '<div class="message ai"><div class="bubble">' + formatAiResponse(escapeHtml(aiText)) + '</div></div>';
+                        // レスポンスの解析。Googleの構造に合わせて深く指定
+                        if (response.candidates && response.candidates[0].content) {
+                            var aiText = response.candidates[0].content.parts[0].text;
+                            chatBox.innerHTML += '<div class="message ai"><div class="bubble">' + aiText.replace(/\n/g, '<br>') + '</div></div>';
+                        }
                     } else {
-                        // 詳細なエラー表示（デバッグ用）
-                        chatBox.innerHTML += '<div class="message ai"><div class="bubble" style="color: red;">送信失敗 (Error: ' + xhr.status + ')<br>URLとAPIキーを確認してください。</div></div>';
+                        // 404が出た場合、詳細を表示
+                        chatBox.innerHTML += '<div class="message ai"><div class="bubble" style="color:red">Error: ' + xhr.status + '<br>APIの設定かURLが間違っている可能性があります。</div></div>';
                     }
                     scrollToBottom();
                 }
             };
 
+            // 送信データの形式を公式ドキュメントに100%合わせる
             var data = JSON.stringify({
-                "contents": [{ "parts": [{ "text": text }] }]
+                "contents": [{
+                    "parts": [{ "text": text }]
+                }]
             });
 
             xhr.send(data);
         }
 
-        // --- ヘルパー関数（古いJavaScript環境向け） ---
         function scrollToBottom() {
-            // iOS 9では scrollTop が不安定な場合があるため、遅延させて実行
-            setTimeout(function() {
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 10);
+            setTimeout(function() { chatBox.scrollTop = chatBox.scrollHeight; }, 50);
         }
 
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        function formatAiResponse(text) {
-            // 改行コードを <br> に変換するだけの簡易フォーマット
-            return text.replace(/\n/g, '<br>');
-        }
-
-        // Enterキーで送信
         userInput.addEventListener("keypress", function(e) {
-            if (e.which === 13) {
-                sendMessage();
-                e.preventDefault();
-            }
+            if (e.which === 13) { sendMessage(); e.preventDefault(); }
         });
-
     </script>
 </body>
 </html>
