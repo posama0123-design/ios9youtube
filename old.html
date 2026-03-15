@@ -78,9 +78,9 @@
         .logo-dark { display: none; height: 18px; }
         body.dark .logo-img { display: none; }
         body.dark .logo-dark { display: block; }
-        /* ↓ gap: 40px */
-        .header-right { display: flex; align-items: center; gap: 40px; padding-right: 2px; }
+        .header-right { display: flex; align-items: center; gap: 8px; padding-right: 2px; }
         .header-right .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; }
+        .header-right .icon-account { margin-left: 18px; }
 
         /* ===== SEARCH OVERLAY ===== */
         .search-overlay {
@@ -385,10 +385,8 @@
         <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-dark" alt="YouTube" style="filter:brightness(10);">
     </div>
     <div class="header-right">
-        <!-- Cast icon (decorative) -->
-        <span class="material-icons-outlined" onclick="showCastToast()" title="キャスト">cast</span>
         <span class="material-icons-outlined" onclick="openSearch()">search</span>
-        <span class="material-icons-outlined" onclick="openSettings()" style="cursor:pointer;">account_circle</span>
+        <span class="material-icons-outlined icon-account" onclick="openSettings()" style="cursor:pointer;">account_circle</span>
     </div>
 </div>
 
