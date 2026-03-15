@@ -4,224 +4,1114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="image_14fcbc.png?v=fixed_final">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="image_14fcbc.png">
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <title>YouTube</title>
     <style>
-        body { background: #f1f1f1; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 52px; padding-bottom: 50px; overflow-x: hidden; }
-        .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 10000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
-        .logo-img { height: 18px; }
-        .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; }
-        .thumb-cont { width: 100%; position: relative; padding-top: 56.25%; background: #000; }
-        .thumb-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .v-detail { padding: 12px; display: flex; }
-        .v-avatar { width: 36px; height: 36px; border-radius: 18px; margin-right: 12px; background: #eee; flex-shrink: 0; overflow: hidden; }
-        .v-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .v-title { font-size: 14px; font-weight: bold; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .v-meta { font-size: 11px; color: #606060; margin-top: 4px; }
-        
-        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 20000; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .player-fixed-cont { position: sticky; top: 0; z-index: 20001; background: #000; }
-        
-        .action-bar { display: flex; justify-content: space-around; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .action-btn { display: flex; flex-direction: column; align-items: center; color: #606060; font-size: 10px; flex: 1; }
-        .action-btn .material-icons-outlined { font-size: 22px; margin-bottom: 4px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
-        .video-desc-area { padding: 12px; font-size: 12px; color: #333; line-height: 1.5; border-bottom: 1px solid #eee; background: #fafafa; }
-        #p-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
-        #p-description.open { display: block; overflow: visible; }
-        .desc-toggle { color: #065fd4; font-weight: bold; margin-top: 5px; cursor: pointer; display: block; }
+        /* ===== THEME VARIABLES (Light) ===== */
+        :root {
+            --bg:        #f1f1f1;
+            --surface:   #ffffff;
+            --border:    #e2e2e2;
+            --border2:   #eeeeee;
+            --text:      #030303;
+            --text2:     #606060;
+            --text3:     #909090;
+            --chip-bg:   #f1f1f1;
+            --chip-text: #333333;
+            --chip-active-bg:   #333333;
+            --chip-active-text: #ffffff;
+            --input-bg:  #f1f1f1;
+            --desc-bg:   #fafafa;
+            --sec-bg:    #f1f1f1;
+            --red:       #cc0000;
+            --tab-active:#cc0000;
+            --icon-color:#333333;
+            --shadow:    rgba(0,0,0,0.15);
+        }
+        body.dark {
+            --bg:        #0f0f0f;
+            --surface:   #212121;
+            --border:    #383838;
+            --border2:   #2e2e2e;
+            --text:      #f1f1f1;
+            --text2:     #aaaaaa;
+            --text3:     #717171;
+            --chip-bg:   #383838;
+            --chip-text: #f1f1f1;
+            --chip-active-bg:   #f1f1f1;
+            --chip-active-text: #0f0f0f;
+            --input-bg:  #383838;
+            --desc-bg:   #181818;
+            --sec-bg:    #181818;
+            --red:       #ff4444;
+            --tab-active:#ff4444;
+            --icon-color:#f1f1f1;
+            --shadow:    rgba(0,0,0,0.5);
+        }
 
-        /* 登録ボタンのデザイン */
-        .sub-btn-red { background: #cc0000; color: #fff; padding: 6px 12px; border-radius: 2px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; white-space: nowrap; }
+        body {
+            background: var(--bg);
+            font-family: ".SFUIText", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            padding-top: 52px;
+            padding-bottom: 50px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: var(--text);
+            transition: background 0.25s, color 0.25s;
+        }
 
-        .comment-row { display: flex; padding: 12px; border-bottom: 1px solid #eee; }
-        .c-avatar { width: 32px; height: 32px; border-radius: 16px; background: #eee; margin-right: 12px; flex-shrink: 0; overflow: hidden; }
+        /* ===== HEADER ===== */
+        .header {
+            position: fixed; top: 0; width: 100%; height: 52px;
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            z-index: 10000; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 14px;
+            transition: background 0.25s, border-color 0.25s;
+        }
+        .logo-img { height: 18px; display: block; }
+        .logo-dark { display: none; height: 18px; }
+        body.dark .logo-img { display: none; }
+        body.dark .logo-dark { display: block; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; }
+
+        /* ===== SEARCH OVERLAY ===== */
+        .search-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 52px; background: var(--surface);
+            border-bottom: 1px solid var(--border); z-index: 10001;
+            align-items: center; padding: 0 12px; gap: 10px;
+            transition: background 0.25s;
+        }
+        .search-overlay.active { display: flex; }
+        .search-overlay input {
+            flex: 1; border: none; outline: none; font-size: 16px;
+            background: var(--input-bg); border-radius: 4px; padding: 7px 12px;
+            color: var(--text);
+        }
+        .search-overlay .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; }
+
+        /* ===== CATEGORY CHIPS ===== */
+        .cat-bar {
+            position: sticky; top: 52px; background: var(--surface);
+            border-bottom: 1px solid var(--border); z-index: 9000;
+            display: flex; overflow-x: auto; padding: 8px 12px; gap: 8px;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            transition: background 0.25s;
+        }
+        .cat-bar::-webkit-scrollbar { display: none; }
+        .chip {
+            flex-shrink: 0; padding: 5px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 500; background: var(--chip-bg);
+            color: var(--chip-text); border: none; cursor: pointer; white-space: nowrap;
+        }
+        .chip.active { background: var(--chip-active-bg); color: var(--chip-active-text); }
+
+        /* ===== VIDEO LIST ===== */
+        .video-item { background: var(--surface); border-bottom: 8px solid var(--bg); cursor: pointer; }
+        .thumb-wrap { width: 100%; position: relative; padding-top: 56.25%; background: #000; overflow: hidden; }
+        .thumb-wrap img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .v-detail { padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; }
+        .v-ch-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--chip-bg); flex-shrink: 0; overflow: hidden; }
+        .v-ch-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .v-info { flex: 1; min-width: 0; }
+        .v-title { font-size: 14px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text); }
+        .v-meta { font-size: 12px; color: var(--text2); margin-top: 4px; }
+        .v-more { color: var(--text2); flex-shrink: 0; padding-top: 1px; cursor: pointer; }
+        .v-more .material-icons-outlined { font-size: 20px; }
+
+        /* ===== FULL PAGE BASE ===== */
+        .full-page {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: var(--surface);
+            z-index: 20000; overflow-y: auto; -webkit-overflow-scrolling: touch;
+            transition: background 0.25s;
+        }
+
+        /* ===== PLAYER PAGE ===== */
+        .player-sticky { position: sticky; top: 0; z-index: 100; background: #000; }
+        #yt-player-cont { width: 100%; aspect-ratio: 16/9; }
+        #yt-player-cont iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        .player-topbar {
+            display: flex; align-items: center; padding: 10px 12px;
+            border-bottom: 1px solid var(--border2); gap: 10px; background: var(--surface);
+        }
+        .player-topbar .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; flex-shrink: 0; }
+        .player-topbar-title { font-size: 14px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+
+        .player-body { padding: 12px; background: var(--surface); }
+        #p-title { font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text); }
+        #p-views { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+        .tag-scroll { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; scrollbar-width: none; background: var(--surface); }
+        .tag-scroll::-webkit-scrollbar { display: none; }
+        .tag-pill { background: var(--chip-bg); color: #065fd4; font-size: 12px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+
+        .ch-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px; border-top: 1px solid var(--border2); border-bottom: 1px solid var(--border2); background: var(--surface);
+        }
+        .ch-row-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .ch-row-avatar { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: var(--chip-bg); flex-shrink: 0; }
+        .ch-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .ch-row-name { font-size: 14px; font-weight: 700; color: var(--text); }
+        .ch-row-subs { font-size: 11px; color: var(--text2); }
+        .sub-btn { background: var(--red); color: #fff; padding: 7px 14px; border-radius: 2px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
+
+        .action-bar { display: flex; border-bottom: 1px solid var(--border2); background: var(--surface); }
+        .act-btn { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 3px; color: var(--text2); cursor: pointer; font-size: 10px; }
+        .act-btn .material-icons-outlined { font-size: 22px; }
+
+        .desc-area { padding: 12px; font-size: 12px; color: var(--text); line-height: 1.6; border-bottom: 1px solid var(--border2); background: var(--desc-bg); transition: background 0.25s; }
+        #p-desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+        #p-desc.open { display: block; }
+        .desc-toggle { color: #065fd4; font-weight: 700; margin-top: 6px; display: block; cursor: pointer; font-size: 12px; }
+
+        .sec-header { padding: 10px 12px; background: var(--sec-bg); font-size: 14px; font-weight: 700; color: var(--text); transition: background 0.25s; }
+
+        .comment-item { display: flex; padding: 12px; border-bottom: 1px solid var(--border2); gap: 10px; background: var(--surface); }
+        .c-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--chip-bg); flex-shrink: 0; }
         .c-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .c-content { flex: 1; font-size: 13px; }
-        .c-user { font-weight: bold; font-size: 12px; margin-bottom: 4px; }
-        .c-actions { display: flex; gap: 15px; margin-top: 10px; color: #606060; }
-        .c-actions .material-icons-outlined { font-size: 16px; }
+        .c-body { flex: 1; }
+        .c-name { font-size: 12px; font-weight: 700; color: var(--text); }
+        .c-time { font-size: 11px; color: var(--text3); margin-left: 6px; font-weight: 400; }
+        .c-text { font-size: 13px; color: var(--text); line-height: 1.5; margin-top: 3px; }
+        .c-acts { display: flex; gap: 14px; margin-top: 8px; color: var(--text2); align-items: center; }
+        .c-acts .material-icons-outlined { font-size: 16px; cursor: pointer; }
+        .c-like-n { font-size: 11px; color: var(--text2); }
 
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 30000; }
-        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #606060; font-size: 10px; }
-        
-        .material-icons-outlined { vertical-align: middle; cursor: pointer; }
-        .ch-header { position: sticky; top: 0; background: #fff; z-index: 20002; display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .next-item { display: flex; padding: 8px 12px; gap: 10px; background: var(--surface); border-bottom: 1px solid var(--bg); cursor: pointer; }
+        .next-thumb { width: 120px; min-width: 120px; aspect-ratio: 16/9; background: #000; border-radius: 2px; overflow: hidden; }
+        .next-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .next-info { flex: 1; min-width: 0; }
+        .next-title { font-size: 13px; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; color: var(--text); }
+        .next-meta { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+        /* ===== CHANNEL PAGE ===== */
+        .ch-page-topbar {
+            position: sticky; top: 0; z-index: 200; background: var(--surface);
+            display: flex; align-items: center; padding: 0 12px; height: 52px;
+            border-bottom: 1px solid var(--border2); gap: 16px; transition: background 0.25s;
+        }
+        .ch-page-topbar .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; }
+        .ch-page-topbar-title { font-size: 16px; font-weight: 700; flex: 1; color: var(--text); }
+
+        .ch-banner { width: 100%; height: 96px; background: linear-gradient(135deg, #cc0000 0%, #ff6b35 100%); background-size: cover; background-position: center; }
+
+        .ch-info-wrap {
+            background: var(--surface); position: relative;
+            padding: 50px 20px 20px; text-align: center;
+            border-bottom: 8px solid var(--bg); transition: background 0.25s;
+        }
+        .ch-big-avatar {
+            position: absolute; top: -42px; left: 50%; transform: translateX(-50%);
+            width: 84px; height: 84px; border-radius: 50%;
+            border: 4px solid var(--surface); overflow: hidden; background: var(--chip-bg);
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+        .ch-big-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .ch-page-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+        .ch-page-subs { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+
+        .ch-tabs { display: flex; border-bottom: 1px solid var(--border2); background: var(--surface); position: sticky; top: 52px; z-index: 150; transition: background 0.25s; }
+        .ch-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 13px; font-weight: 600; color: var(--text3); border-bottom: 2px solid transparent; cursor: pointer; }
+        .ch-tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+        /* ===== SHORTS PAGE ===== */
+        .shorts-page {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: #000;
+            z-index: 20000; overflow: hidden;
+        }
+        .shorts-feed {
+            width: 100%; height: 100%;
+            overflow-y: scroll; scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        .shorts-feed::-webkit-scrollbar { display: none; }
+
+        .short-slide {
+            width: 100%; height: 100vh;
+            scroll-snap-align: start; position: relative;
+            background: #111; overflow: hidden;
+        }
+        .short-slide iframe { width: 100%; height: 100%; border: none; display: block; }
+
+        .shorts-topbar {
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding: 14px 16px; z-index: 10;
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%);
+            pointer-events: none;
+        }
+        .shorts-logo-wrap { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
+        .shorts-logo-text { color: #fff; font-size: 18px; font-weight: 700; }
+
+        .short-actions {
+            position: absolute; right: 10px; bottom: 90px;
+            display: flex; flex-direction: column; align-items: center; gap: 22px; z-index: 10;
+        }
+        .s-act { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .s-act .material-icons-outlined { font-size: 28px; color: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
+        .s-act span.lbl { font-size: 11px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+        .s-avatar-wrap { display: flex; flex-direction: column; align-items: center; }
+        .s-avatar { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff; overflow: hidden; background: #555; }
+        .s-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .s-sub-dot {
+            width: 22px; height: 22px; background: #cc0000; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin-top: -11px; z-index: 1;
+        }
+        .s-sub-dot .material-icons-outlined { font-size: 14px !important; color: #fff !important; }
+
+        .short-info {
+            position: absolute; bottom: 60px; left: 12px; right: 80px; z-index: 10;
+            pointer-events: none;
+        }
+        .short-ch { font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.7); margin-bottom: 6px; pointer-events: auto; cursor: pointer; }
+        .short-title-txt { font-size: 13px; color: #fff; line-height: 1.45; text-shadow: 0 1px 3px rgba(0,0,0,0.7); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .short-music { display: flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 12px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+        .short-music .material-icons-outlined { font-size: 14px; color: #fff !important; }
+
+        .shorts-loading { display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 16px; }
+        .shorts-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+        /* ===== MENU BOTTOM SHEET ===== */
+        .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 50000; }
+        .menu-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; border-radius: 14px 14px 0 0; padding-bottom: 24px; }
+        .menu-handle { width: 38px; height: 4px; background: #d2d2d2; border-radius: 2px; margin: 10px auto 4px; }
+        .menu-video-row { display: flex; padding: 12px 18px; gap: 12px; border-bottom: 1px solid #eee; }
+        .menu-mini-thumb { width: 80px; min-width: 80px; height: 45px; border-radius: 2px; overflow: hidden; background: #000; }
+        .menu-mini-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .menu-mini-title { font-size: 13px; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--text); }
+        .menu-mini-ch { font-size: 11px; color: var(--text2); margin-top: 3px; }
+        .menu-item { display: flex; align-items: center; padding: 14px 20px; font-size: 14px; color: var(--text); gap: 20px; cursor: pointer; }
+        .menu-item .material-icons-outlined { font-size: 22px; color: var(--text2); }
+        .menu-item:active { background: var(--chip-bg); }
+
+        /* ===== TAB BAR ===== */
+        .tab-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 50px;
+            background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; z-index: 30000; transition: background 0.25s, border-color 0.25s;
+        }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); font-size: 10px; gap: 1px; cursor: pointer; }
+        .tab-item.active { color: var(--tab-active); }
+        .tab-item .material-icons-outlined { font-size: 22px; }
+        .shorts-bolt { width: 22px; height: 22px; fill: currentColor; }
+
+        /* ===== SETTINGS SHEET ===== */
+        .settings-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 60000;
+        }
+        .settings-sheet {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: var(--surface); border-radius: 16px 16px 0 0;
+            padding-bottom: 30px; transition: background 0.25s;
+        }
+        .settings-handle { width: 38px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 0; }
+        .settings-title { font-size: 16px; font-weight: 700; padding: 14px 20px 10px; color: var(--text); border-bottom: 1px solid var(--border2); }
+        .settings-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid var(--border2); cursor: pointer;
+        }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-row-left { display: flex; align-items: center; gap: 16px; }
+        .settings-row-left .material-icons-outlined { font-size: 22px; color: var(--text2); }
+        .settings-row-label { font-size: 15px; color: var(--text); }
+        .settings-row-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+        .settings-version { padding: 20px; text-align: center; font-size: 13px; color: var(--text3); }
+
+        /* Toggle switch */
+        .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+        .toggle-track {
+            width: 46px; height: 26px; border-radius: 13px;
+            background: var(--chip-bg); position: relative;
+            transition: background 0.2s; border: 1.5px solid var(--border);
+            cursor: pointer; flex-shrink: 0;
+        }
+        .toggle-track.on { background: var(--red); border-color: var(--red); }
+        .toggle-thumb {
+            position: absolute; top: 2px; left: 2px;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; transition: transform 0.2s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .toggle-track.on .toggle-thumb { transform: translateX(20px); }
+
+        /* ===== LOADING ===== */
+        .loading { padding: 28px; text-align: center; color: var(--text3); font-size: 13px; }
+        .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .material-icons-outlined { vertical-align: middle; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div onclick="location.reload()"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img"></div>
-    <div><span class="material-icons-outlined" style="font-size:24px;" onclick="doSearch()">search</span></div>
+<!-- ===== MAIN HEADER ===== -->
+<div class="header" id="main-header">
+    <div onclick="goHome()" style="cursor:pointer;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img" alt="YouTube">
+        <!-- Dark mode: white logo -->
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-dark" alt="YouTube" style="filter:brightness(10);">
+    </div>
+    <div class="header-right">
+        <!-- Cast icon (decorative) -->
+        <span class="material-icons-outlined" onclick="showCastToast()" title="キャスト">cast</span>
+        <span class="material-icons-outlined" onclick="openSearch()">search</span>
+        <span class="material-icons-outlined" onclick="openSettings()" style="cursor:pointer;">account_circle</span>
+    </div>
 </div>
 
+<!-- ===== ACCOUNT / SETTINGS MENU ===== -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettings()">
+    <div class="settings-sheet" onclick="event.stopPropagation()">
+        <div class="settings-handle"></div>
+        <div class="settings-title">設定</div>
+
+        <!-- Dark mode toggle -->
+        <div class="settings-row" onclick="toggleDark()">
+            <div class="settings-row-left">
+                <span class="material-icons-outlined" id="theme-icon">dark_mode</span>
+                <div>
+                    <div class="settings-row-label" id="theme-label">ダークモード</div>
+                    <div class="settings-row-sub" id="theme-sub">現在: ライトモード</div>
+                </div>
+            </div>
+            <div class="toggle-wrap">
+                <div class="toggle-track" id="dark-toggle">
+                    <div class="toggle-thumb"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account info row (decorative) -->
+        <div class="settings-row">
+            <div class="settings-row-left">
+                <span class="material-icons-outlined">account_circle</span>
+                <div>
+                    <div class="settings-row-label">アカウント</div>
+                    <div class="settings-row-sub">ゲストユーザー</div>
+                </div>
+            </div>
+            <span class="material-icons-outlined" style="color:var(--text3);font-size:20px;">chevron_right</span>
+        </div>
+
+        <!-- Notifications (decorative) -->
+        <div class="settings-row">
+            <div class="settings-row-left">
+                <span class="material-icons-outlined">notifications_outlined</span>
+                <div>
+                    <div class="settings-row-label">通知</div>
+                    <div class="settings-row-sub">すべての通知をオフ</div>
+                </div>
+            </div>
+            <span class="material-icons-outlined" style="color:var(--text3);font-size:20px;">chevron_right</span>
+        </div>
+
+        <!-- Version info -->
+        <div class="settings-version">
+            YouTube v12.11.6 (iOS 9 再現版)<br>
+            <span style="font-size:11px;margin-top:4px;display:block;">© 2024 Google LLC</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== SEARCH OVERLAY ===== -->
+<div class="search-overlay" id="search-bar">
+    <span class="material-icons-outlined" onclick="closeSearch()">arrow_back</span>
+    <input type="text" id="search-input" placeholder="検索" autocomplete="off"
+           onkeydown="if(event.keyCode===13)doSearch()">
+    <span class="material-icons-outlined" onclick="doSearch()">search</span>
+</div>
+
+<!-- ===== MAIN FEED ===== -->
+<div id="cat-bar-wrap"></div>
 <div id="main-view"></div>
 
-<div id="channel-page" class="full-page">
-    <div class="ch-header">
-        <span class="material-icons-outlined" onclick="closeChannel()" style="margin-right:20px;">arrow_back</span>
-        <span id="ch-header-title" style="font-weight:bold; font-size:16px;">チャンネル</span>
+<!-- ===== CHANNEL PAGE ===== -->
+<div id="ch-page" class="full-page">
+    <div class="ch-page-topbar">
+        <span class="material-icons-outlined" onclick="closeCh()">arrow_back</span>
+        <span class="ch-page-topbar-title" id="ch-page-title">チャンネル</span>
     </div>
-    <div style="padding:20px; text-align:center; background:#fafafa; border-bottom:1px solid #eee;">
-        <div id="ch-avatar-big" style="width:60px; height:60px; border-radius:30px; background:#ccc; margin:0 auto 10px; overflow:hidden;"></div>
-        <h2 id="ch-name" style="margin:0; font-size:18px;"></h2>
-        <div class="sub-btn-red" style="display:inline-block; margin-top:10px;">チャンネル登録</div>
+    <div class="ch-banner" id="ch-banner"></div>
+    <div class="ch-info-wrap">
+        <div class="ch-big-avatar" id="ch-big-avatar"></div>
+        <div class="ch-page-name" id="ch-page-name"></div>
+        <div class="ch-page-subs" id="ch-page-subs"></div>
+        <button class="sub-btn" onclick="alert('チャンネル登録しました！')">チャンネル登録</button>
+    </div>
+    <div class="ch-tabs">
+        <div class="ch-tab active" onclick="this.parentNode.querySelectorAll('.ch-tab').forEach(function(t){t.classList.remove('active')});this.classList.add('active')">動画</div>
+        <div class="ch-tab" onclick="this.parentNode.querySelectorAll('.ch-tab').forEach(function(t){t.classList.remove('active')});this.classList.add('active')">概要</div>
     </div>
     <div id="ch-video-list"></div>
 </div>
 
+<!-- ===== PLAYER PAGE ===== -->
 <div id="player-page" class="full-page">
-    <div class="player-fixed-cont"><div id="yt-player-cont" style="width:100%; aspect-ratio:16/9;"></div></div>
-    <div style="padding:12px;">
-        <p id="p-title" style="font-size:16px; font-weight:bold; margin:0;"></p>
-        <p id="p-views" style="font-size:12px; color:#606060; margin:8px 0;"></p>
-        <div id="p-ch-info" style="display:flex; align-items:center; justify-content:space-between; margin-top:15px; padding:10px 0; border-top:1px solid #eee;">
-            </div>
+    <div class="player-sticky">
+        <div id="yt-player-cont"></div>
     </div>
-    
+    <div class="player-topbar">
+        <span class="material-icons-outlined" onclick="closePlayer()">arrow_back</span>
+        <span class="player-topbar-title" id="p-nav-title"></span>
+        <span class="material-icons-outlined" onclick="openMenu('','','','',null)">more_vert</span>
+    </div>
+    <div class="player-body">
+        <p id="p-title"></p>
+        <p id="p-views"></p>
+    </div>
+    <div class="tag-scroll" id="tag-scroll"></div>
+    <div class="ch-row" id="p-ch-row"></div>
     <div class="action-bar">
-        <div class="action-btn"><span class="material-icons-outlined">thumb_up</span><span>高評価</span></div>
-        <div class="action-btn"><span class="material-icons-outlined">thumb_down</span><span>低評価</span></div>
-        <div class="action-btn"><span class="material-icons-outlined">share</span><span>共有</span></div>
-        <div class="action-btn" onclick="closePlayer()"><span class="material-icons-outlined">expand_more</span><span>閉じる</span></div>
+        <div class="act-btn" id="like-btn" onclick="toggleLike()">
+            <span class="material-icons-outlined" id="like-icon">thumb_up</span>
+            <span id="like-lbl">高評価</span>
+        </div>
+        <div class="act-btn">
+            <span class="material-icons-outlined">thumb_down</span><span>低評価</span>
+        </div>
+        <div class="act-btn" onclick="shareVideo()">
+            <span class="material-icons-outlined">share</span><span>共有</span>
+        </div>
+        <div class="act-btn">
+            <span class="material-icons-outlined">playlist_add</span><span>保存</span>
+        </div>
+        <div class="act-btn">
+            <span class="material-icons-outlined">more_horiz</span><span>その他</span>
+        </div>
     </div>
-
-    <div class="video-desc-area">
-        <div id="p-description"></div>
+    <div class="desc-area">
+        <div id="p-desc"></div>
         <span class="desc-toggle" id="desc-btn" onclick="toggleDesc()">...もっと見る</span>
     </div>
-
-    <div style="padding:10px; background:#f1f1f1; font-size:14px; font-weight:bold;">コメント</div>
-    <div id="real-comments" style="background:#fff;"></div>
-    
-    <div style="padding:10px; background:#f1f1f1; font-size:14px; font-weight:bold;">次の動画</div>
-    <div id="next-videos-list"></div>
+    <div class="sec-header">コメント <span id="comment-count" style="font-weight:400;color:#606060;font-size:12px;"></span></div>
+    <div id="comments-list"></div>
+    <div class="sec-header">次の動画</div>
+    <div id="next-list"></div>
 </div>
 
+<!-- ===== SHORTS PAGE ===== -->
+<div id="shorts-page" class="shorts-page">
+    <div class="shorts-feed" id="shorts-feed">
+        <div class="shorts-loading">
+            <div class="shorts-spinner"></div>
+            <span style="color:#fff;font-size:14px;">読み込み中...</span>
+        </div>
+    </div>
+    <!-- Shorts header floats above feed -->
+    <div class="shorts-topbar">
+        <div class="shorts-logo-wrap">
+            <!-- YouTube Shorts correct lightning bolt "S" icon -->
+            <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30 4L10 26H22L18 44L38 22H26L30 4Z" fill="white"/>
+            </svg>
+            <span class="shorts-logo-text">ショート</span>
+        </div>
+        <span class="material-icons-outlined" style="color:#fff;font-size:24px;pointer-events:auto;cursor:pointer;" onclick="openSearch()">search</span>
+    </div>
+</div>
+
+<!-- ===== BOTTOM MENU SHEET ===== -->
+<div class="menu-overlay" id="menu-overlay" onclick="closeMenu()">
+    <div class="menu-sheet" onclick="event.stopPropagation()">
+        <div class="menu-handle"></div>
+        <div class="menu-video-row" id="menu-info" style="display:none;"></div>
+        <div class="menu-item"><span class="material-icons-outlined">watch_later</span>後で見る</div>
+        <div class="menu-item"><span class="material-icons-outlined">playlist_add</span>再生リストに追加</div>
+        <div class="menu-item"><span class="material-icons-outlined">download</span>オフラインに保存</div>
+        <div class="menu-item"><span class="material-icons-outlined">share</span>共有</div>
+        <div class="menu-item"><span class="material-icons-outlined">not_interested</span>興味なし</div>
+    </div>
+</div>
+
+<!-- ===== TAB BAR ===== -->
 <div class="tab-bar">
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">local_fire_department</span><span>人気</span></div>
-    <div class="tab-item" onclick="closePlayer(); closeChannel();"><span class="material-icons-outlined">subscriptions</span><span>登録済</span></div>
+    <div class="tab-item active" id="tab-0" onclick="goHome()">
+        <span class="material-icons-outlined">home</span><span>ホーム</span>
+    </div>
+    <div class="tab-item" id="tab-1" onclick="goShorts()">
+        <!-- Correct YouTube Shorts bolt icon -->
+        <svg class="shorts-bolt" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30 4L10 26H22L18 44L38 22H26L30 4Z"/>
+        </svg>
+        <span>ショート</span>
+    </div>
+    <div class="tab-item" id="tab-2" onclick="goTrending()">
+        <span class="material-icons-outlined">local_fire_department</span><span>急上昇</span>
+    </div>
+    <div class="tab-item" id="tab-3" onclick="setTab(3)">
+        <span class="material-icons-outlined">subscriptions</span><span>登録済み</span>
+    </div>
+    <div class="tab-item" id="tab-4" onclick="setTab(4)">
+        <span class="material-icons-outlined">video_library</span><span>ライブラリ</span>
+    </div>
 </div>
 
 <script>
-    var KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI';
+/* ======================================================
+   CONFIG — APIキーは変えないこと！
+====================================================== */
+var KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI';
+var currentVid = null;
+var liked = {};
+var shortsLoaded = false;
 
-    function ajaxGet(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) { callback(JSON.parse(xhr.responseText)); }
-        };
-        xhr.send();
-    }
-
-    function formatViews(num) {
-        if(!num) return "";
-        num = parseInt(num);
-        if (num >= 10000) return (num / 10000).toFixed(1) + "万回視聴";
-        return num + "回視聴";
-    }
-
-    function toggleDesc() {
-        var d = document.getElementById('p-description');
-        var b = document.getElementById('desc-btn');
-        if(d.classList.contains('open')) { d.classList.remove('open'); b.innerText = '...もっと見る'; } 
-        else { d.classList.add('open'); b.innerText = '表示を減らす'; }
-    }
-
-    function loadHome() {
-        var cats = ['1', '20', '10', '17', '24']; 
-        var cat = cats[Math.floor(Math.random() * cats.length)];
-        var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&videoCategoryId='+cat+'&maxResults=10&key=' + KEY;
-        renderList(url, 'main-view', true);
-    }
-
-    function doSearch() {
-        var q = prompt("YouTube 検索");
-        if (q) {
-            var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(q)+'&type=video&maxResults=10&key='+KEY;
-            renderList(url, 'main-view', false);
+/* ======================================================
+   UTILS
+====================================================== */
+function get(url, cb) {
+    var x = new XMLHttpRequest();
+    x.open('GET', url, true);
+    x.onreadystatechange = function() {
+        if (x.readyState === 4) {
+            if (x.status === 200) { try { cb(JSON.parse(x.responseText)); } catch(e){ console.error(e); } }
+            else console.warn('API error', x.status, url.substring(0,80));
         }
+    };
+    x.send();
+}
+
+function esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fv(n) {
+    if (!n) return '';
+    n = parseInt(n);
+    if (n >= 100000000) return (n/100000000).toFixed(1) + '億回視聴';
+    if (n >= 10000)     return (n/10000).toFixed(1) + '万回視聴';
+    return n + '回視聴';
+}
+
+function fl(n) {
+    if (!n) return '高評価';
+    n = parseInt(n);
+    if (n >= 10000) return (n/10000).toFixed(1) + '万';
+    return String(n);
+}
+
+function ago(s) {
+    if (!s) return '';
+    var d = (Date.now() - new Date(s)) / 1000;
+    if (d < 60)       return '今';
+    if (d < 3600)     return Math.floor(d/60) + '分前';
+    if (d < 86400)    return Math.floor(d/3600) + '時間前';
+    if (d < 2592000)  return Math.floor(d/86400) + '日前';
+    if (d < 31536000) return Math.floor(d/2592000) + 'ヶ月前';
+    return Math.floor(d/31536000) + '年前';
+}
+
+/* ======================================================
+   TABS
+====================================================== */
+function setTab(n) {
+    for (var i = 0; i < 5; i++) {
+        var t = document.getElementById('tab-' + i);
+        if (t) t.className = 'tab-item' + (i === n ? ' active' : '');
     }
+}
 
-    function renderList(url, targetId, isVideoAPI) {
-        var target = document.getElementById(targetId);
-        target.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
-        ajaxGet(url, function(data) {
-            var html = '';
-            data.items.forEach(function(v) {
-                var videoId = isVideoAPI ? v.id : v.id.videoId;
-                if(!videoId) return;
-                var viewCount = v.statistics ? formatViews(v.statistics.viewCount) : "";
-                html += '<div class="video-item">' +
-                        '<div class="thumb-cont" onclick="openPlayer(\''+videoId+'\')"><img src="'+v.snippet.thumbnails.high.url+'" class="thumb-img"></div>' +
-                        '<div class="v-detail">' +
-                        '<div class="v-avatar" onclick="openChannel(\''+v.snippet.channelId+'\')"><img src="'+v.snippet.thumbnails.default.url+'"></div>' +
-                        '<div onclick="openPlayer(\''+videoId+'\')">' +
-                        '<p class="v-title">'+v.snippet.title+'</p>' +
-                        '<p class="v-meta">'+v.snippet.channelTitle+' ・ '+viewCount+'</p></div></div></div>';
-            });
-            target.innerHTML = html;
+/* ======================================================
+   SEARCH
+====================================================== */
+function openSearch() {
+    document.getElementById('search-bar').classList.add('active');
+    document.getElementById('main-header').style.display = 'none';
+    setTimeout(function(){ document.getElementById('search-input').focus(); }, 80);
+}
+function closeSearch() {
+    document.getElementById('search-bar').classList.remove('active');
+    document.getElementById('main-header').style.display = '';
+}
+function doSearch() {
+    var q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+    closeSearch();
+    document.getElementById('cat-bar-wrap').innerHTML = '';
+    renderList(
+        'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(q) +
+        '&type=video&regionCode=JP&maxResults=15&key=' + KEY,
+        false, 'main-view'
+    );
+    setTab(0); closePlayer(); closeCh(); closeShorts();
+}
+
+/* ======================================================
+   CATEGORIES
+====================================================== */
+var CATS = [
+    {id:'all',label:'すべて'}, {id:'20',label:'ゲーム'}, {id:'10',label:'音楽'},
+    {id:'17',label:'スポーツ'}, {id:'24',label:'エンタメ'}, {id:'28',label:'テクノロジー'},
+    {id:'22',label:'ブログ'}, {id:'25',label:'ニュース'}, {id:'1',label:'映画'}, {id:'15',label:'ペット'}
+];
+
+function buildCatBar(active) {
+    document.getElementById('cat-bar-wrap').innerHTML =
+        '<div class="cat-bar">' +
+        CATS.map(function(c){
+            return '<div class="chip' + (c.id===active?' active':'') + '" onclick="loadCat(\'' + c.id + '\')">' + c.label + '</div>';
+        }).join('') + '</div>';
+}
+
+function loadCat(id) {
+    buildCatBar(id);
+    var url = id === 'all'
+        ? 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&maxResults=15&key=' + KEY
+        : 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&videoCategoryId=' + id + '&maxResults=15&key=' + KEY;
+    renderList(url, true, 'main-view');
+}
+
+function goHome() {
+    setTab(0); closePlayer(); closeCh(); closeShorts();
+    buildCatBar('all');
+    renderList('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&maxResults=15&key=' + KEY, true, 'main-view');
+}
+
+function goTrending() {
+    setTab(2); closePlayer(); closeCh(); closeShorts();
+    buildCatBar('all');
+    renderList('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&maxResults=20&key=' + KEY, true, 'main-view');
+}
+
+/* ======================================================
+   RENDER VIDEO LIST  (汎用 — targetId で出力先を変える)
+====================================================== */
+function renderList(url, isVideo, targetId) {
+    var el = document.getElementById(targetId);
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>読み込み中...</div>';
+    get(url, function(data) {
+        if (!data.items || !data.items.length) {
+            el.innerHTML = '<div class="loading">結果が見つかりませんでした</div>';
+            return;
+        }
+        var html = '';
+        data.items.forEach(function(v) {
+            var vid = isVideo ? v.id : (v.id && v.id.videoId);
+            if (!vid) return;
+            var th  = (v.snippet.thumbnails.maxres || v.snippet.thumbnails.high || v.snippet.thumbnails.medium || v.snippet.thumbnails.default).url;
+            var ath = (v.snippet.thumbnails.default || v.snippet.thumbnails.medium).url;
+            var views = (isVideo && v.statistics) ? fv(v.statistics.viewCount) : '';
+            var pub   = ago(v.snippet.publishedAt);
+            var meta  = [v.snippet.channelTitle, views, pub].filter(Boolean).join(' ・ ');
+            html +=
+                '<div class="video-item">' +
+                  '<div class="thumb-wrap" onclick="openPlayer(\'' + esc(vid) + '\')">' +
+                    '<img src="' + esc(th) + '" loading="lazy">' +
+                  '</div>' +
+                  '<div class="v-detail">' +
+                    '<div class="v-ch-avatar" onclick="openChById(\'' + esc(v.snippet.channelId) + '\',event)">' +
+                      '<img src="' + esc(ath) + '" loading="lazy">' +
+                    '</div>' +
+                    '<div class="v-info" onclick="openPlayer(\'' + esc(vid) + '\')">' +
+                      '<p class="v-title">' + esc(v.snippet.title) + '</p>' +
+                      '<p class="v-meta">' + esc(meta) + '</p>' +
+                    '</div>' +
+                    '<div class="v-more" onclick="openMenu(\'' + esc(vid) + '\',\'' + esc(v.snippet.title) + '\',\'' + esc(th) + '\',\'' + esc(v.snippet.channelTitle) + '\',event)">' +
+                      '<span class="material-icons-outlined">more_vert</span>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>';
         });
-    }
+        el.innerHTML = html;
+    });
+}
 
-    function openPlayer(id) {
-        document.getElementById('player-page').style.display = 'block';
-        document.getElementById('player-page').scrollTop = 0;
-        document.getElementById('p-description').classList.remove('open');
-        document.getElementById('desc-btn').innerText = '...もっと見る';
-        document.getElementById('yt-player-cont').innerHTML = '<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>';
-        
-        ajaxGet('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id='+id+'&key='+KEY, function(data) {
-            var v = data.items[0];
-            document.getElementById('p-title').innerText = v.snippet.title;
-            document.getElementById('p-views').innerText = formatViews(v.statistics.viewCount);
-            document.getElementById('p-description').innerText = v.snippet.description || "説明はありません。";
-            
-            ajaxGet('https://www.googleapis.com/youtube/v3/channels?part=snippet&id='+v.snippet.channelId+'&key='+KEY, function(chData) {
-                var ch = chData.items[0];
-                // アイコンとチャンネル名をクリックでチャンネルページへ飛ぶように修正
-                document.getElementById('p-ch-info').innerHTML = 
-                    '<div style="display:flex; align-items:center;" onclick="openChannel(\''+ch.id+'\')">' +
-                    '<div class="v-avatar"><img src="'+ch.snippet.thumbnails.default.url+'"></div>' +
-                    '<p style="margin:0; font-size:14px; font-weight:bold;">'+ch.snippet.title+'</p></div>' +
-                    '<button class="sub-btn-red" onclick="alert(\'登録しました\')">チャンネル登録</button>';
-            });
+function openChById(id, e) { if(e) e.stopPropagation(); openCh(id); }
+
+/* ======================================================
+   PLAYER
+====================================================== */
+function openPlayer(id) {
+    currentVid = id;
+    var pg = document.getElementById('player-page');
+    pg.style.display = 'block'; pg.scrollTop = 0;
+
+    document.getElementById('p-desc').classList.remove('open');
+    document.getElementById('desc-btn').innerText = '...もっと見る';
+    document.getElementById('p-title').innerText = '読み込み中...';
+    document.getElementById('p-nav-title').innerText = '';
+    document.getElementById('p-views').innerText = '';
+    document.getElementById('p-ch-row').innerHTML = '';
+    document.getElementById('tag-scroll').innerHTML = '';
+    document.getElementById('like-icon').innerText = 'thumb_up';
+    document.getElementById('like-lbl').innerText = '高評価';
+    document.getElementById('like-btn').style.color = '';
+    document.getElementById('comments-list').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    document.getElementById('next-list').innerHTML = '';
+    document.getElementById('comment-count').innerText = '';
+
+    document.getElementById('yt-player-cont').innerHTML =
+        '<iframe src="https://www.youtube.com/embed/' + id +
+        '?autoplay=1&playsinline=1&rel=0" allow="autoplay;encrypted-media" allowfullscreen></iframe>';
+
+    get('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=' + id + '&key=' + KEY, function(data) {
+        if (!data.items || !data.items.length) return;
+        var v = data.items[0];
+        document.getElementById('p-title').innerText = v.snippet.title;
+        document.getElementById('p-nav-title').innerText = v.snippet.title;
+        document.getElementById('p-views').innerText = fv(v.statistics.viewCount) + ' ・ ' + ago(v.snippet.publishedAt);
+        document.getElementById('p-desc').innerText = v.snippet.description || '説明はありません。';
+        document.getElementById('like-lbl').innerText = fl(v.statistics.likeCount);
+        if (liked[id]) document.getElementById('like-btn').style.color = '#065fd4';
+
+        if (v.statistics.commentCount)
+            document.getElementById('comment-count').innerText = parseInt(v.statistics.commentCount).toLocaleString() + '件';
+
+        if (v.snippet.tags)
+            document.getElementById('tag-scroll').innerHTML = v.snippet.tags.slice(0,6).map(function(t){
+                return '<div class="tag-pill">#' + esc(t) + '</div>';
+            }).join('');
+
+        get('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=' + v.snippet.channelId + '&key=' + KEY, function(cd) {
+            var ch = cd.items[0];
+            var subs = ch.statistics && ch.statistics.subscriberCount
+                ? (parseInt(ch.statistics.subscriberCount) >= 10000
+                    ? (parseInt(ch.statistics.subscriberCount)/10000).toFixed(0) + '万人'
+                    : parseInt(ch.statistics.subscriberCount).toLocaleString() + '人')
+                : '';
+            document.getElementById('p-ch-row').innerHTML =
+                '<div class="ch-row-left" onclick="openCh(\'' + esc(ch.id) + '\')">' +
+                  '<div class="ch-row-avatar"><img src="' + esc(ch.snippet.thumbnails.default.url) + '"></div>' +
+                  '<div><div class="ch-row-name">' + esc(ch.snippet.title) + '</div>' +
+                  '<div class="ch-row-subs">' + esc(subs) + ' 登録者</div></div>' +
+                '</div>' +
+                '<button class="sub-btn" onclick="alert(\'チャンネル登録しました！\')">チャンネル登録</button>';
         });
+    });
 
-        ajaxGet('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId='+id+'&maxResults=5&key='+KEY, function(data) {
-            var html = '';
-            if(data.items) {
-                data.items.forEach(function(item) {
-                    var c = item.snippet.topLevelComment.snippet;
-                    html += '<div class="comment-row"><div class="c-avatar"><img src="'+c.authorProfileImageUrl+'"></div><div class="c-content"><div class="c-user">'+c.authorDisplayName+'</div><div>'+c.textDisplay+'</div><div class="c-actions"><span class="material-icons-outlined">thumb_up</span><span class="material-icons-outlined">thumb_down</span><span class="material-icons-outlined">chat_bubble_outline</span></div></div></div>';
+    get('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=' + id + '&maxResults=10&order=relevance&key=' + KEY, function(data) {
+        if (!data.items || !data.items.length) {
+            document.getElementById('comments-list').innerHTML = '<div class="loading">コメントはありません</div>';
+            return;
+        }
+        document.getElementById('comments-list').innerHTML = data.items.map(function(item) {
+            var c = item.snippet.topLevelComment.snippet;
+            var rep = item.snippet.totalReplyCount;
+            return '<div class="comment-item">' +
+                '<div class="c-avatar"><img src="' + esc(c.authorProfileImageUrl) + '" loading="lazy"></div>' +
+                '<div class="c-body">' +
+                  '<span class="c-name">' + esc(c.authorDisplayName) + '</span>' +
+                  '<span class="c-time">' + ago(c.publishedAt) + '</span>' +
+                  '<div class="c-text">' + esc(c.textDisplay) + '</div>' +
+                  '<div class="c-acts">' +
+                    '<span class="material-icons-outlined">thumb_up</span>' +
+                    '<span class="c-like-n">' + (c.likeCount > 0 ? c.likeCount : '') + '</span>' +
+                    '<span class="material-icons-outlined">thumb_down</span>' +
+                    (rep > 0 ? '<span style="color:#065fd4;font-size:12px;">返信 ' + rep + '件</span>' : '') +
+                  '</div></div></div>';
+        }).join('');
+    });
+
+    // Build next list from current main feed
+    setTimeout(function() {
+        var items = document.querySelectorAll('#main-view .video-item');
+        var html = ''; var cnt = 0;
+        for (var i = 0; i < items.length && cnt < 10; i++) {
+            var oc = (items[i].querySelector('.thumb-wrap') || {}).getAttribute('onclick') || '';
+            var m = oc.match(/openPlayer\('([^']+)'\)/);
+            var vid = m ? m[1] : '';
+            if (!vid || vid === id) continue;
+            var ti = items[i].querySelector('.thumb-wrap img');
+            var tl = items[i].querySelector('.v-title');
+            var mt = items[i].querySelector('.v-meta');
+            html += '<div class="next-item" onclick="openPlayer(\'' + esc(vid) + '\')">' +
+                '<div class="next-thumb"><img src="' + esc(ti?ti.src:'') + '" loading="lazy"></div>' +
+                '<div class="next-info">' +
+                  '<p class="next-title">' + esc(tl?tl.innerText:'') + '</p>' +
+                  '<p class="next-meta">' + esc(mt?mt.innerText:'') + '</p>' +
+                '</div></div>';
+            cnt++;
+        }
+        document.getElementById('next-list').innerHTML = html;
+    }, 200);
+}
+
+function closePlayer() {
+    document.getElementById('player-page').style.display = 'none';
+    document.getElementById('yt-player-cont').innerHTML = '';
+    currentVid = null;
+}
+
+function toggleDesc() {
+    var d = document.getElementById('p-desc');
+    var b = document.getElementById('desc-btn');
+    if (d.classList.contains('open')) { d.classList.remove('open'); b.innerText = '...もっと見る'; }
+    else { d.classList.add('open'); b.innerText = '表示を減らす'; }
+}
+
+function toggleLike() {
+    if (!currentVid) return;
+    liked[currentVid] = !liked[currentVid];
+    document.getElementById('like-btn').style.color = liked[currentVid] ? '#065fd4' : '';
+}
+
+function shareVideo() {
+    if (!currentVid) return;
+    var url = 'https://youtu.be/' + currentVid;
+    if (navigator.share) navigator.share({ url: url });
+    else prompt('動画URL', url);
+}
+
+/* ======================================================
+   CHANNEL PAGE
+====================================================== */
+function openCh(chId) {
+    var pg = document.getElementById('ch-page');
+    pg.style.display = 'block'; pg.scrollTop = 0;
+    document.getElementById('ch-big-avatar').innerHTML = '';
+    document.getElementById('ch-page-name').innerText = '';
+    document.getElementById('ch-page-subs').innerText = '';
+    document.getElementById('ch-video-list').innerHTML = '<div class="loading"><div class="spinner"></div>読み込み中...</div>';
+
+    get('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=' + chId + '&key=' + KEY, function(data) {
+        var ch = data.items[0];
+        var sn = ch.snippet;
+        document.getElementById('ch-page-title').innerText = sn.title;
+        document.getElementById('ch-page-name').innerText = sn.title;
+        document.getElementById('ch-big-avatar').innerHTML = '<img src="' + esc(sn.thumbnails.medium.url) + '">';
+
+        var subs = ch.statistics && ch.statistics.subscriberCount
+            ? parseInt(ch.statistics.subscriberCount).toLocaleString() + ' 登録者'
+            : '';
+        document.getElementById('ch-page-subs').innerText = subs;
+
+        // Banner image
+        var banner = document.getElementById('ch-banner');
+        if (ch.brandingSettings && ch.brandingSettings.image && ch.brandingSettings.image.bannerExternalUrl) {
+            banner.style.backgroundImage = 'url(' + ch.brandingSettings.image.bannerExternalUrl + ')';
+            banner.style.backgroundSize = 'cover';
+            banner.style.backgroundPosition = 'center';
+        } else {
+            banner.style.background = 'linear-gradient(135deg, #cc0000 0%, #ff6b35 100%)';
+        }
+
+        get(
+            'https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + chId +
+            '&type=video&order=date&maxResults=15&key=' + KEY,
+            function(vdata) {
+                if (!vdata.items || !vdata.items.length) {
+                    document.getElementById('ch-video-list').innerHTML = '<div class="loading">動画がありません</div>';
+                    return;
+                }
+                var html = '';
+                vdata.items.forEach(function(v) {
+                    var vid = v.id && v.id.videoId;
+                    if (!vid) return;
+                    var th  = (v.snippet.thumbnails.high || v.snippet.thumbnails.medium || v.snippet.thumbnails.default).url;
+                    var ath = (v.snippet.thumbnails.default || v.snippet.thumbnails.medium).url;
+                    html +=
+                        '<div class="video-item">' +
+                          '<div class="thumb-wrap" onclick="openPlayer(\'' + esc(vid) + '\')">' +
+                            '<img src="' + esc(th) + '" loading="lazy">' +
+                          '</div>' +
+                          '<div class="v-detail">' +
+                            '<div class="v-ch-avatar"><img src="' + esc(ath) + '" loading="lazy"></div>' +
+                            '<div class="v-info" onclick="openPlayer(\'' + esc(vid) + '\')">' +
+                              '<p class="v-title">' + esc(v.snippet.title) + '</p>' +
+                              '<p class="v-meta">' + esc(v.snippet.channelTitle) + ' ・ ' + esc(ago(v.snippet.publishedAt)) + '</p>' +
+                            '</div>' +
+                          '</div>' +
+                        '</div>';
                 });
+                document.getElementById('ch-video-list').innerHTML = html;
             }
-            document.getElementById('real-comments').innerHTML = html || '<div style="padding:15px; font-size:12px; color:#606060;">コメントなし</div>';
-        });
+        );
+    });
+}
+function closeCh() { document.getElementById('ch-page').style.display = 'none'; }
 
-        document.getElementById('next-videos-list').innerHTML = document.getElementById('main-view').innerHTML;
+/* ======================================================
+   SHORTS
+====================================================== */
+function goShorts() {
+    setTab(1); closePlayer(); closeCh();
+    document.getElementById('shorts-page').style.display = 'block';
+    if (!shortsLoaded) loadShorts();
+}
+function closeShorts() {
+    document.getElementById('shorts-page').style.display = 'none';
+}
+
+function loadShorts() {
+    get(
+        'https://www.googleapis.com/youtube/v3/search?part=snippet&q=%23shorts+%E6%97%A5%E6%9C%AC&type=video&videoDuration=short&regionCode=JP&maxResults=12&key=' + KEY,
+        function(data) {
+            if (!data.items || !data.items.length) {
+                document.getElementById('shorts-feed').innerHTML = '<div class="shorts-loading"><span style="color:#fff;">読み込めませんでした</span></div>';
+                return;
+            }
+            var items = data.items.filter(function(v){ return v.id && v.id.videoId; });
+            var html = '';
+            items.forEach(function(v, idx) {
+                var vid = v.id.videoId;
+                var ath = (v.snippet.thumbnails.default || v.snippet.thumbnails.medium).url;
+                html +=
+                    '<div class="short-slide" id="ss-' + idx + '">' +
+                      '<iframe src="https://www.youtube.com/embed/' + esc(vid) +
+                        '?autoplay=' + (idx===0?'1':'0') + '&loop=1&playlist=' + esc(vid) +
+                        '&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1" ' +
+                        'allow="autoplay;encrypted-media" allowfullscreen></iframe>' +
+                      '<div class="short-actions">' +
+                        '<div class="s-avatar-wrap">' +
+                          '<div class="s-avatar"><img src="' + esc(ath) + '" loading="lazy"></div>' +
+                          '<div class="s-sub-dot"><span class="material-icons-outlined">add</span></div>' +
+                        '</div>' +
+                        '<div class="s-act"><span class="material-icons-outlined">thumb_up</span><span class="lbl">いいね</span></div>' +
+                        '<div class="s-act"><span class="material-icons-outlined">thumb_down</span><span class="lbl">低評価</span></div>' +
+                        '<div class="s-act"><span class="material-icons-outlined">chat_bubble_outline</span><span class="lbl">コメント</span></div>' +
+                        '<div class="s-act" onclick="shareShort(\'' + esc(vid) + '\')"><span class="material-icons-outlined">share</span><span class="lbl">共有</span></div>' +
+                      '</div>' +
+                      '<div class="short-info">' +
+                        '<div class="short-ch" onclick="openCh(\'' + esc(v.snippet.channelId) + '\')">@' + esc(v.snippet.channelTitle) + '</div>' +
+                        '<div class="short-title-txt">' + esc(v.snippet.title) + '</div>' +
+                        '<div class="short-music"><span class="material-icons-outlined">music_note</span><span>' + esc(v.snippet.channelTitle) + ' - オリジナル</span></div>' +
+                      '</div>' +
+                    '</div>';
+            });
+            document.getElementById('shorts-feed').innerHTML = html;
+            shortsLoaded = true;
+            setupShortsScroll(items.length);
+        }
+    );
+}
+
+function setupShortsScroll(total) {
+    var feed = document.getElementById('shorts-feed');
+    var last = 0;
+    feed.addEventListener('scroll', function() {
+        var idx = Math.round(feed.scrollTop / window.innerHeight);
+        if (idx === last || idx >= total) return;
+        // Toggle autoplay via src replacement
+        var prevFr = document.querySelector('#ss-' + last + ' iframe');
+        var currFr = document.querySelector('#ss-' + idx  + ' iframe');
+        if (prevFr) prevFr.src = prevFr.src.replace('autoplay=1','autoplay=0');
+        if (currFr && currFr.src.indexOf('autoplay=0') > -1) currFr.src = currFr.src.replace('autoplay=0','autoplay=1');
+        last = idx;
+    });
+}
+
+function shareShort(vid) {
+    var url = 'https://youtube.com/shorts/' + vid;
+    if (navigator.share) navigator.share({ url: url });
+    else prompt('ショートURL', url);
+}
+
+/* ======================================================
+   MENU SHEET
+====================================================== */
+function openMenu(vid, title, thumb, ch, e) {
+    if (e) e.stopPropagation();
+    var info = document.getElementById('menu-info');
+    if (title) {
+        info.style.display = 'flex';
+        info.innerHTML =
+            '<div class="menu-mini-thumb"><img src="' + esc(thumb) + '"></div>' +
+            '<div><div class="menu-mini-title">' + esc(title) + '</div>' +
+            '<div class="menu-mini-ch">' + esc(ch) + '</div></div>';
+    } else {
+        info.style.display = 'none';
     }
+    document.getElementById('menu-overlay').style.display = 'block';
+}
+function closeMenu() { document.getElementById('menu-overlay').style.display = 'none'; }
 
-    function openChannel(chId) {
-        document.getElementById('channel-page').style.display = 'block';
-        document.getElementById('channel-page').scrollTop = 0;
-        ajaxGet('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id='+chId+'&key='+KEY, function(data) {
-            var ch = data.items[0];
-            document.getElementById('ch-name').innerText = ch.snippet.title;
-            document.getElementById('ch-header-title').innerText = ch.snippet.title;
-            document.getElementById('ch-avatar-big').innerHTML = '<img src="'+ch.snippet.thumbnails.medium.url+'" style="width:100%; height:100%; object-fit:cover;">';
-            renderList('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId='+chId+'&type=video&order=date&maxResults=10&key='+KEY, 'ch-video-list', false);
-        });
+/* ======================================================
+   SETTINGS & DARK MODE
+====================================================== */
+var isDark = false;
+
+function openSettings() {
+    document.getElementById('settings-overlay').style.display = 'block';
+    updateThemeUI();
+}
+function closeSettings() {
+    document.getElementById('settings-overlay').style.display = 'none';
+}
+
+function toggleDark() {
+    isDark = !isDark;
+    applyTheme();
+    updateThemeUI();
+    // Persist to localStorage if available
+    try { localStorage.setItem('yt_dark', isDark ? '1' : '0'); } catch(e){}
+}
+
+function applyTheme() {
+    if (isDark) {
+        document.body.classList.add('dark');
+    } else {
+        document.body.classList.remove('dark');
     }
+}
 
-    function closePlayer() { document.getElementById('player-page').style.display = 'none'; document.getElementById('yt-player-cont').innerHTML = ''; }
-    function closeChannel() { document.getElementById('channel-page').style.display = 'none'; }
+function updateThemeUI() {
+    var tog   = document.getElementById('dark-toggle');
+    var lbl   = document.getElementById('theme-label');
+    var sub   = document.getElementById('theme-sub');
+    var icon  = document.getElementById('theme-icon');
+    if (isDark) {
+        tog.classList.add('on');
+        lbl.innerText  = 'ダークモード';
+        sub.innerText  = '現在: ダークモード';
+        icon.innerText = 'light_mode';
+    } else {
+        tog.classList.remove('on');
+        lbl.innerText  = 'ダークモード';
+        sub.innerText  = '現在: ライトモード';
+        icon.innerText = 'dark_mode';
+    }
+}
 
-    window.onload = loadHome;
+/* ======================================================
+   CAST TOAST
+====================================================== */
+function showCastToast() {
+    var existing = document.getElementById('cast-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'cast-toast';
+    toast.style.cssText =
+        'position:fixed;top:62px;right:12px;background:#333;color:#fff;' +
+        'font-size:13px;padding:10px 16px;border-radius:8px;z-index:99999;' +
+        'box-shadow:0 4px 16px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;' +
+        'animation:fadeInDown 0.2s ease;';
+    toast.innerHTML = '<span class="material-icons-outlined" style="font-size:18px;color:#4fc3f7;">cast_connected</span>' +
+                      'キャスト先のデバイスが見つかりません';
+    document.body.appendChild(toast);
+    setTimeout(function(){ if(toast.parentNode) toast.remove(); }, 2800);
+}
+
+/* CSS for toast animation */
+(function(){
+    var s = document.createElement('style');
+    s.textContent = '@keyframes fadeInDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(s);
+})();
+
+/* ======================================================
+   INIT
+====================================================== */
+window.onload = function() {
+    // Restore saved theme
+    try {
+        if (localStorage.getItem('yt_dark') === '1') {
+            isDark = true;
+            applyTheme();
+        }
+    } catch(e){}
+    goHome();
+};
 </script>
 </body>
 </html>
