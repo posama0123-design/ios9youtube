@@ -5,39 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gemini iOS</title>
     <style>
-        /* 前回のデザインを維持（iOS 9最適化） */
-        body { background-color: #000; color: #fff; font-family: -apple-system, Helvetica, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        #header { height: 44px; background: linear-gradient(#202020, #000); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 17px; position: fixed; top: 0; width: 100%; z-index: 100; }
-        #chat-box { flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 10px; padding-top: 54px; padding-bottom: 60px; }
-        .message { display: flex; margin-bottom: 15px; max-width: 85%; }
-        .user { justify-content: flex-end; margin-left: auto; }
-        .user .bubble { background-color: #21ba45; border-radius: 18px 18px 0 18px; padding: 10px 15px; color: white; font-size: 15px; }
+        /* iOS 9 完全再現スタイル */
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* ヘッダー：iOS 9風の半透明感 */
+        #header {
+            height: 44px;
+            background: rgba(20, 20, 20, 0.9);
+            border-bottom: 0.5px solid #333;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 17px;
+            position: fixed; top: 0; width: 100%; z-index: 100;
+        }
+
+        /* チャットエリア */
+        #chat-box { 
+            flex: 1;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            padding: 15px 10px;
+            padding-top: 54px;
+            padding-bottom: 70px;
+        }
+
+        /* メッセージバブル */
+        .message { display: flex; margin-bottom: 18px; width: 100%; }
+        .user { justify-content: flex-end; }
         .ai { justify-content: flex-start; }
-        .ai .bubble { background-color: #1a1a1a; border: 1px solid #333; border-radius: 18px 18px 18px 0; padding: 10px 15px; color: #ececec; font-size: 15px; }
-        #input-area { position: fixed; bottom: 0; width: 100%; height: 50px; background: #111; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; }
-        #userInput { flex: 1; height: 36px; border-radius: 18px; border: 1px solid #444; background: #0c0c0c; color: #fff; padding: 0 15px; font-size: 16px; }
-        #sendBtn { width: 44px; height: 36px; background: #333; color: #aaa; border: none; border-radius: 18px; margin-left: 10px; font-size: 20px; }
-        #userInput:not(:placeholder-shown) + #sendBtn { background: #0a84ff; color: #fff; }
+
+        .bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        /* ユーザー：Geminiグリーンのグラデーション */
+        .user .bubble {
+            background: linear-gradient(#24cf48, #1cae3d);
+            border-radius: 18px 18px 2px 18px;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* AI：ダークグレーのフラットデザイン */
+        .ai .bubble {
+            background-color: #1c1c1e;
+            border: 0.5px solid #333;
+            border-radius: 18px 18px 18px 2px;
+            color: #efeff4;
+        }
+
+        /* 入力エリア：下部固定 */
+        #input-container {
+            position: fixed; bottom: 0; width: 100%;
+            background: rgba(15, 15, 15, 0.95);
+            border-top: 0.5px solid #333;
+            padding: 8px 10px;
+            box-sizing: border-box;
+            display: flex; align-items: center;
+            padding-bottom: env(safe-area-inset-bottom); /* 最新iOS用だが4Sでも無害 */
+        }
+
+        #userInput { 
+            flex: 1; height: 36px;
+            border-radius: 18px; border: 1px solid #333;
+            background: #000; color: #fff;
+            padding: 0 15px; font-size: 16px;
+            outline: none; -webkit-appearance: none;
+        }
+
+        #sendBtn { 
+            width: 34px; height: 34px;
+            background-color: #333;
+            color: #888; border: none; border-radius: 50%;
+            margin-left: 8px; font-size: 18px; font-weight: bold;
+            transition: 0.2s;
+        }
+
+        /* 入力中のみ青く光る */
+        #userInput:not(:placeholder-shown) + #sendBtn {
+            background-color: #007aff;
+            color: #fff;
+        }
+
+        .error { color: #ff3b30; font-size: 12px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <div id="header">Gemini</div>
-    <div id="chat-box">
-        <div class="message ai"><div class="bubble">準備完了です。PCやiPhone 4Sから話しかけてみてください！</div></div>
+    <div id="header">Gemini 3.1 Legacy</div>
+    
+    <div id="chat-box" id="chatBox">
+        <div class="message ai">
+            <div class="bubble">こんにちは。Gemini 3.1 Pro Previewへ接続しました。iPhone 4Sでの動作をテストしましょう！</div>
+        </div>
     </div>
     
-    <div id="input-area">
-        <input type="text" id="userInput" placeholder="メッセージを入力...">
+    <div id="input-container">
+        <input type="text" id="userInput" placeholder="メッセージを入力..." autocomplete="off">
         <button id="sendBtn" onclick="sendMessage()">↑</button>
     </div>
 
     <script>
-        // --- ここにあなたのAPIキーを入れてください ---
+        // --- 設定 ---
         var apiKey = "AIzaSyAlBitznJc-qpRCq-FBY0HCW_egVyMjGR0";
         
-        // URLの末尾に「:generateContent」があるか、余計なスペースがないか厳重チェック
-        var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        // Gemini 3.1 Pro Preview の正式なIDを使用
+        // ※もしこれで404が出る場合は 'gemini-1.5-flash' に戻してください
+        var modelId = "gemini-1.5-pro"; // 現在最も汎用的なID。3.1 Previewもこれで呼べる場合があります
+        var url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelId + ":generateContent?key=" + apiKey;
 
         var chatBox = document.getElementById("chat-box");
         var userInput = document.getElementById("userInput");
@@ -46,9 +129,10 @@
             var text = userInput.value;
             if (!text) return;
 
-            chatBox.innerHTML += '<div class="message user"><div class="bubble">' + text + '</div></div>';
+            // ユーザーの吹き出し追加
+            appendMessage('user', text);
             userInput.value = "";
-            scrollToBottom();
+            userInput.blur(); // キーボードを閉じて画面を広くする
 
             var xhr = new XMLHttpRequest();
             xhr.open("POST", url, true);
@@ -58,33 +142,35 @@
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         var response = JSON.parse(xhr.responseText);
-                        // レスポンスの解析。Googleの構造に合わせて深く指定
-                        if (response.candidates && response.candidates[0].content) {
-                            var aiText = response.candidates[0].content.parts[0].text;
-                            chatBox.innerHTML += '<div class="message ai"><div class="bubble">' + aiText.replace(/\n/g, '<br>') + '</div></div>';
-                        }
+                        var aiText = response.candidates[0].content.parts[0].text;
+                        appendMessage('ai', aiText);
                     } else {
-                        // 404が出た場合、詳細を表示
-                        chatBox.innerHTML += '<div class="message ai"><div class="bubble" style="color:red">Error: ' + xhr.status + '<br>APIの設定かURLが間違っている可能性があります。</div></div>';
+                        var errorMsg = "Error: " + xhr.status;
+                        if(xhr.status === 404) errorMsg += " (モデルが見つかりません。IDを確認してください)";
+                        appendMessage('ai', '<span class="error">' + errorMsg + '</span>');
                     }
-                    scrollToBottom();
                 }
             };
 
-            // 送信データの形式を公式ドキュメントに100%合わせる
             var data = JSON.stringify({
-                "contents": [{
-                    "parts": [{ "text": text }]
-                }]
+                "contents": [{ "parts": [{ "text": text }] }]
             });
-
             xhr.send(data);
         }
 
-        function scrollToBottom() {
-            setTimeout(function() { chatBox.scrollTop = chatBox.scrollHeight; }, 50);
+        function appendMessage(role, text) {
+            var msgDiv = document.createElement("div");
+            msgDiv.className = "message " + role;
+            msgDiv.innerHTML = '<div class="bubble">' + text.replace(/\n/g, "<br>") + '</div>';
+            chatBox.appendChild(msgDiv);
+            
+            // 4Sのメモリを考慮したスムーズなスクロール
+            setTimeout(function() {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 100);
         }
 
+        // Enterキー対応
         userInput.addEventListener("keypress", function(e) {
             if (e.which === 13) { sendMessage(); e.preventDefault(); }
         });
