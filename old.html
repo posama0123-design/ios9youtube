@@ -78,7 +78,7 @@
         .logo-dark { display: none; height: 18px; }
         body.dark .logo-img { display: none; }
         body.dark .logo-dark { display: block; }
-        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right { display: flex; align-items: center; gap: 28px; padding-right: 2px; }
         .header-right .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; }
 
         /* ===== SEARCH OVERLAY ===== */
@@ -117,7 +117,7 @@
         .video-item { background: var(--surface); border-bottom: 8px solid var(--bg); cursor: pointer; }
         .thumb-wrap { width: 100%; position: relative; padding-top: 56.25%; background: #000; overflow: hidden; }
         .thumb-wrap img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .v-detail { padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start; }
+        .v-detail { padding: 10px 6px 10px 8px; display: flex; gap: 8px; align-items: flex-start; }
         .v-ch-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--chip-bg); flex-shrink: 0; overflow: hidden; }
         .v-ch-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .v-info { flex: 1; min-width: 0; }
@@ -351,6 +351,34 @@
         .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ===== ERROR STATE (スクショ完全再現) ===== */
+        .error-block {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 56px 30px; text-align: center;
+            cursor: pointer; min-height: 240px;
+        }
+        /* 大きなグレーの丸 */
+        .error-icon-wrap {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: #c8c8c8;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        body.dark .error-icon-wrap { background: #4a4a4a; }
+        /* 丸の中の ! — SVGで正確に再現 */
+        .error-icon-wrap svg {
+            width: 36px; height: 36px;
+        }
+        .error-title {
+            font-size: 14px; color: #606060; margin-bottom: 4px; font-weight: 400;
+        }
+        body.dark .error-title { color: #aaa; }
+        .error-hint {
+            font-size: 14px; color: #606060; font-weight: 400;
+        }
+        body.dark .error-hint { color: #aaa; }
+
         .material-icons-outlined { vertical-align: middle; }
     </style>
 </head>
@@ -570,16 +598,42 @@ var shortsLoaded = false;
 /* ======================================================
    UTILS
 ====================================================== */
-function get(url, cb) {
+function get(url, cb, errCb) {
     var x = new XMLHttpRequest();
     x.open('GET', url, true);
     x.onreadystatechange = function() {
         if (x.readyState === 4) {
-            if (x.status === 200) { try { cb(JSON.parse(x.responseText)); } catch(e){ console.error(e); } }
-            else console.warn('API error', x.status, url.substring(0,80));
+            if (x.status === 200) {
+                try {
+                    var d = JSON.parse(x.responseText);
+                    // YouTube API がエラーオブジェクトを返す場合も弾く
+                    if (d.error) { if (errCb) errCb(d.error.message); else console.warn('API:', d.error.message); }
+                    else cb(d);
+                } catch(e) { if (errCb) errCb(e.message); else console.error(e); }
+            } else {
+                var msg = 'HTTP ' + x.status;
+                if (errCb) errCb(msg); else console.warn('API error', msg);
+            }
         }
     };
+    x.onerror = function() { if (errCb) errCb('ネットワークエラー'); };
     x.send();
+}
+
+/* エラー表示HTML — スクショ完全再現 */
+function errHTML(retryFn) {
+    var tap = retryFn ? ' onclick="' + retryFn + '"' : '';
+    return '<div class="error-block"' + tap + '>' +
+        '<div class="error-icon-wrap">' +
+          /* 白い ! マーク (太め・丸底) をSVGで再現 */
+          '<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<rect x="15.5" y="7" width="5" height="16" rx="2.5" fill="white"/>' +
+            '<circle cx="18" cy="28.5" r="2.8" fill="white"/>' +
+          '</svg>' +
+        '</div>' +
+        '<div class="error-title">読み込みエラー</div>' +
+        '<div class="error-hint">再試行するにはタップしてください</div>' +
+        '</div>';
 }
 
 function esc(s) {
@@ -690,9 +744,11 @@ function goTrending() {
 function renderList(url, isVideo, targetId) {
     var el = document.getElementById(targetId);
     el.innerHTML = '<div class="loading"><div class="spinner"></div>読み込み中...</div>';
+    // retryFn: targetIdに応じた再試行コマンドを生成
+    var retryCall = 'renderList(\'' + url.replace(/'/g,"\\'") + '\',' + isVideo + ',\'' + targetId + '\')';
     get(url, function(data) {
         if (!data.items || !data.items.length) {
-            el.innerHTML = '<div class="loading">結果が見つかりませんでした</div>';
+            el.innerHTML = errHTML(retryCall);
             return;
         }
         var html = '';
@@ -724,7 +780,7 @@ function renderList(url, isVideo, targetId) {
                 '</div>';
         });
         el.innerHTML = html;
-    });
+    }, function() { el.innerHTML = errHTML(retryCall); });
 }
 
 function openChById(id, e) { if(e) e.stopPropagation(); openCh(id); }
@@ -755,8 +811,15 @@ function openPlayer(id) {
         '<iframe src="https://www.youtube.com/embed/' + id +
         '?autoplay=1&playsinline=1&rel=0" allow="autoplay;encrypted-media" allowfullscreen></iframe>';
 
+
+    var vidRetry = 'openPlayer(\'' + id + '\')';
+
     get('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=' + id + '&key=' + KEY, function(data) {
-        if (!data.items || !data.items.length) return;
+        if (!data.items || !data.items.length) {
+            document.getElementById('p-title').innerText = '';
+            document.getElementById('p-ch-row').innerHTML = errHTML(vidRetry);
+            return;
+        }
         var v = data.items[0];
         document.getElementById('p-title').innerText = v.snippet.title;
         document.getElementById('p-nav-title').innerText = v.snippet.title;
@@ -787,7 +850,12 @@ function openPlayer(id) {
                   '<div class="ch-row-subs">' + esc(subs) + ' 登録者</div></div>' +
                 '</div>' +
                 '<button class="sub-btn" onclick="alert(\'チャンネル登録しました！\')">チャンネル登録</button>';
+        }, function() {
+            document.getElementById('p-ch-row').innerHTML = errHTML(vidRetry);
         });
+    }, function() {
+        document.getElementById('p-title').innerText = '';
+        document.getElementById('p-ch-row').innerHTML = errHTML(vidRetry);
     });
 
     get('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=' + id + '&maxResults=10&order=relevance&key=' + KEY, function(data) {
@@ -811,6 +879,8 @@ function openPlayer(id) {
                     (rep > 0 ? '<span style="color:#065fd4;font-size:12px;">返信 ' + rep + '件</span>' : '') +
                   '</div></div></div>';
         }).join('');
+    }, function() {
+        document.getElementById('comments-list').innerHTML = errHTML('openPlayer(\'' + id + '\')');
     });
 
     // Build next list from current main feed
@@ -925,8 +995,12 @@ function openCh(chId) {
                         '</div>';
                 });
                 document.getElementById('ch-video-list').innerHTML = html;
+            }, function() {
+                document.getElementById('ch-video-list').innerHTML = errHTML('openCh(\'' + chId + '\')');
             }
         );
+    }, function() {
+        document.getElementById('ch-video-list').innerHTML = errHTML('openCh(\'' + chId + '\')');
     });
 }
 function closeCh() { document.getElementById('ch-page').style.display = 'none'; }
