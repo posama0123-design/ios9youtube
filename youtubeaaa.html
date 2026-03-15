@@ -3,240 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <link rel="manifest" href="manifest_yt.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="YouTube">
-    
     <link rel="apple-touch-icon" href="youtube.png">
-    <link rel="icon" type="image/png" href="youtube.png">
-
     <title>YouTube Legacy</title>
-
     <style>
-        /* 最新YouTube風ダークモード */
-        body { 
-            background: #0f0f0f; 
-            color: #fff; 
-            font-family: "Roboto", "Helvetica Neue", Arial, sans-serif; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
+        body { background: #0f0f0f; color: #fff; font-family: "Roboto", sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { height: 48px; background: #0f0f0f; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; }
+        .logo { font-weight: bold; font-size: 18px; margin-right: 10px; flex-shrink: 0; }
+        .search-box { flex: 1; background: #2a2a2a; border-radius: 20px; padding: 5px 15px; border: 1px solid #3d3d3d; display: flex; }
+        .search-input { background: transparent; border: none; color: #fff; font-size: 14px; outline: none; width: 100%; }
         
-        /* ヘッダー */
-        .header { 
-            height: 48px; 
-            background: #0f0f0f; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 10px; 
-            border-bottom: 1px solid #2a2a2a;
-            flex-shrink: 0;
-        }
-        .logo { font-weight: bold; font-size: 20px; color: #fff; text-decoration: none; }
-        .logo-yt { color: red; }
-        .search-box { 
-            background: #2a2a2a; 
-            border-radius: 20px; 
-            padding: 5px 10px; 
-            width: 50%;
-            border: 1px solid #3d3d3d;
-        }
-        .search-input { 
-            background: transparent; 
-            border: none; 
-            color: #fff; 
-            font-size: 14px; 
-            outline: none; 
-            width: 100%;
-        }
+        .video-list { flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+        .video-item { margin-bottom: 20px; text-decoration: none; color: #fff; display: block; }
+        .video-thumbnail { width: 100%; aspect-ratio: 16/9; background-color: #2a2a2a; background-size: cover; background-position: center; }
+        .video-info { padding: 12px; display: flex; gap: 10px; }
+        .video-title { font-size: 14px; font-weight: 500; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-meta { font-size: 12px; color: #aaa; margin-top: 4px; }
 
-        /* メインエリア：動画リスト */
-        .video-list { 
-            flex: 1; 
-            overflow-y: scroll; 
-            padding: 10px; 
-            -webkit-overflow-scrolling: touch; 
-        }
-        .video-item { 
-            margin-bottom: 15px; 
-            display: block; 
-            text-decoration: none; 
-            color: #fff; 
-        }
-        .video-thumbnail { 
-            width: 100%; 
-            aspect-ratio: 16/9; 
-            background: #2a2a2a; 
-            border-radius: 12px; 
-            background-size: cover;
-            background-position: center;
-        }
-        .video-info { padding: 8px 5px; }
-        .video-title { 
-            font-size: 14px; 
-            font-weight: bold; 
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .video-meta { font-size: 12px; color: #aaa; margin-top: 3px; }
+        /* 再生用オーバーレイ */
+        #player-overlay { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; z-index: 1000; }
+        .player-header { height: 44px; display: flex; align-items: center; padding: 0 15px; background: #0f0f0f; }
+        #player-container { width: 100%; aspect-ratio: 16/9; }
 
-        /* ボトムナビゲーション（最新UI風） */
-        .bottom-nav { 
-            height: 48px; 
-            background: #0f0f0f; 
-            border-top: 1px solid #2a2a2a; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-around; 
-            font-size: 10px;
-            flex-shrink: 0;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        .nav-item { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            text-decoration: none; 
-            color: #aaa; 
-        }
-        .nav-item.active { color: #fff; }
-        .nav-icon { font-size: 20px; margin-bottom: 2px; }
-
-        /* 動画再生プレイヤー（オーバーレイ） */
-        #player-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            flex-direction: column;
-            z-index: 100;
-        }
-        #player-container {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-        }
-        .player-header {
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-        }
-        .close-btn { color: #fff; font-size: 20px; cursor: pointer; }
+        .bottom-nav { height: 48px; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-around; align-items: center; font-size: 10px; color: #aaa; flex-shrink: 0; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <a href="#" class="logo"><span class="logo-yt">▶</span> YouTube</a>
+    <div class="logo"><span style="color:red">▶</span></div>
     <div class="search-box">
-        <input type="text" class="search-input" placeholder="検索" onkeypress="if(event.keyCode===13){searchVideos();}">
+        <input type="text" id="search-q" class="search-input" placeholder="YouTubeを検索" onkeypress="if(event.keyCode===13)searchVideos()">
     </div>
-    <div style="width:24px;"></div>
 </div>
 
-<div class="video-list" id="home-list">
-    <a href="#" class="video-item" onclick="playVideo('dQw4w9WgXcQ'); return false;">
-        <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg');"></div>
-        <div class="video-info">
-            <div class="video-title">【soumano_yukuri】ゆっくり実況part1「UE5で街を作る」</div>
-            <div class="video-meta">soumano_yukuri • 1.2万回視聴 • 1日前</div>
-        </div>
-    </a>
-    
-    <a href="#" class="video-item" onclick="playVideo('jNQXAC9IVRw'); return false;">
-        <div class="video-thumbnail" style="background-image: url('https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg');"></div>
-        <div class="video-info">
-            <div class="video-title">Urban Syndicate - 公式トレーラー「夜の街を駆け抜ける」</div>
-            <div class="video-meta">Urban Syndicate • 5000回視聴 • 2時間前</div>
-        </div>
-    </a>
+<div class="video-list" id="video-results">
+    </div>
+
+<div id="player-overlay">
+    <div class="player-header"><button onclick="closePlayer()" style="background:none;border:none;color:#fff;font-size:20px;">✕</button></div>
+    <div id="player-container"></div>
+    <div id="playing-info" style="padding:15px;"></div>
 </div>
 
 <div class="bottom-nav">
-    <a href="#" class="nav-item active"><div class="nav-icon">🏠</div>ホーム</a>
-    <a href="#" class="nav-item"><div class="nav-icon">🩳</div>Shorts</a>
-    <a href="#" class="nav-item"><div class="nav-icon">➕</div></a>
-    <a href="#" class="nav-item"><div class="nav-icon">🔔</div>登録チャンネル</div>
-    <a href="#" class="nav-item"><div class="nav-icon">👤</div>あなた</div>
-</div>
-
-<div id="player-overlay">
-    <div class="player-header">
-        <div class="close-btn" onclick="closePlayer()">＜</div>
-        <div class="video-meta">再生中</div>
-        <div style="width:20px;"></div>
-    </div>
-    <div id="player-container">
-        </div>
-    <div class="video-info" style="padding: 15px;">
-        <div class="video-title" id="playing-title">動画タイトル</div>
-        <div class="video-meta" id="playing-meta">チャンネル名 • 視聴回数</div>
-    </div>
+    <span>🏠 ホーム</span><span>🩳 Shorts</span><span>🔔 登録</span><span>👤 あなた</span>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
-    var player;
-    
-    // YouTube IFrame APIの準備ができたら呼ばれる関数
+    const API_KEY = "AIzaSyCDseE0EZTBBzTz-6oDac7QENwW9M0zOyw";
+    let player;
+
     function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player-container', {
-            height: '100%',
-            width: '100%',
-            videoId: '', // 最初は空
-            playerVars: {
-                'playsinline': 1, // iOSで全画面にしない
-                'modestbranding': 1, // YouTubeロゴを小さく
-                'rel': 0 // 関連動画を非表示
-            },
-            events: {
-                'onReady': onPlayerReady
-            }
+        player = new YT.Player('player-container', { height: '100%', width: '100%', playerVars: { 'playsinline': 1 } });
+    }
+
+    async function searchVideos() {
+        const q = document.getElementById('search-q').value;
+        if (!q) return;
+        
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(q)}&type=video&key=${API_KEY}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            displayResults(data.items);
+        } catch (e) { alert("検索に失敗しました"); }
+    }
+
+    function displayResults(items) {
+        const container = document.getElementById('video-results');
+        container.innerHTML = '';
+        items.forEach(item => {
+            const v = item.snippet;
+            const id = item.id.videoId;
+            const div = document.createElement('div');
+            div.className = 'video-item';
+            div.onclick = () => playVideo(id, v.title, v.channelTitle);
+            div.innerHTML = `
+                <div class="video-thumbnail" style="background-image:url('${v.thumbnails.medium.url}')"></div>
+                <div class="video-info">
+                    <div>
+                        <div class="video-title">${v.title}</div>
+                        <div class="video-meta">${v.channelTitle}</div>
+                    </div>
+                </div>`;
+            container.appendChild(div);
         });
     }
 
-    function onPlayerReady(event) {
-        // プレイヤーの準備ができた時の処理（特に何もしない）
-    }
-
-    // 動画を再生する
-    function playVideo(videoId) {
+    function playVideo(id, title, channel) {
         document.getElementById('player-overlay').style.display = 'flex';
-        player.loadVideoById(videoId);
-        
-        // とりあえずサンプルデータを表示（本物のデータ取得はAPIキーが必要）
-        document.getElementById('playing-title').innerText = "【soumano_yukuri】ゆっくり実況part1「UE5で街を作る」";
-        document.getElementById('playing-meta').innerText = "soumano_yukuri • 1.2万回視聴";
+        player.loadVideoById(id);
+        document.getElementById('playing-info').innerHTML = `<div class="video-title">${title}</div><div class="video-meta">${channel}</div>`;
     }
 
-    // プレイヤーを閉じる
     function closePlayer() {
         player.stopVideo();
         document.getElementById('player-overlay').style.display = 'none';
     }
-
-    // ★動画検索（土台のみ）
-    function searchVideos() {
-        var query = document.querySelector('.search-input').value;
-        if (!query) return;
-        alert("『" + query + "』の検索結果を表示します（※APIキーが必要です）");
-        // ここにYouTube Data APIを使って検索結果を取得する処理を追加します
-    }
+    
+    // 初期表示としてトレンドっぽいのを出す
+    window.onload = () => { document.getElementById('search-q').value = "ゆっくり実況"; searchVideos(); };
 </script>
 </body>
 </html>
