@@ -78,7 +78,8 @@
         .logo-dark { display: none; height: 18px; }
         body.dark .logo-img { display: none; }
         body.dark .logo-dark { display: block; }
-        .header-right { display: flex; align-items: center; gap: 28px; padding-right: 2px; }
+        /* ↓ gap: 40px */
+        .header-right { display: flex; align-items: center; gap: 40px; padding-right: 2px; }
         .header-right .material-icons-outlined { font-size: 24px; color: var(--icon-color); cursor: pointer; }
 
         /* ===== SEARCH OVERLAY ===== */
@@ -357,7 +358,6 @@
             justify-content: center; padding: 56px 30px; text-align: center;
             cursor: pointer; min-height: 240px;
         }
-        /* 大きなグレーの丸 */
         .error-icon-wrap {
             width: 80px; height: 80px; border-radius: 50%;
             background: #c8c8c8;
@@ -366,17 +366,10 @@
             flex-shrink: 0;
         }
         body.dark .error-icon-wrap { background: #4a4a4a; }
-        /* 丸の中の ! — SVGで正確に再現 */
-        .error-icon-wrap svg {
-            width: 36px; height: 36px;
-        }
-        .error-title {
-            font-size: 14px; color: #606060; margin-bottom: 4px; font-weight: 400;
-        }
+        .error-icon-wrap svg { width: 36px; height: 36px; }
+        .error-title { font-size: 14px; color: #606060; margin-bottom: 4px; font-weight: 400; }
         body.dark .error-title { color: #aaa; }
-        .error-hint {
-            font-size: 14px; color: #606060; font-weight: 400;
-        }
+        .error-hint { font-size: 14px; color: #606060; font-weight: 400; }
         body.dark .error-hint { color: #aaa; }
 
         .material-icons-outlined { vertical-align: middle; }
@@ -540,7 +533,6 @@
     <!-- Shorts header floats above feed -->
     <div class="shorts-topbar">
         <div class="shorts-logo-wrap">
-            <!-- YouTube Shorts correct lightning bolt "S" icon -->
             <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M30 4L10 26H22L18 44L38 22H26L30 4Z" fill="white"/>
             </svg>
@@ -569,7 +561,6 @@
         <span class="material-icons-outlined">home</span><span>ホーム</span>
     </div>
     <div class="tab-item" id="tab-1" onclick="goShorts()">
-        <!-- Correct YouTube Shorts bolt icon -->
         <svg class="shorts-bolt" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
             <path d="M30 4L10 26H22L18 44L38 22H26L30 4Z"/>
         </svg>
@@ -606,7 +597,6 @@ function get(url, cb, errCb) {
             if (x.status === 200) {
                 try {
                     var d = JSON.parse(x.responseText);
-                    // YouTube API がエラーオブジェクトを返す場合も弾く
                     if (d.error) { if (errCb) errCb(d.error.message); else console.warn('API:', d.error.message); }
                     else cb(d);
                 } catch(e) { if (errCb) errCb(e.message); else console.error(e); }
@@ -625,7 +615,6 @@ function errHTML(retryFn) {
     var tap = retryFn ? ' onclick="' + retryFn + '"' : '';
     return '<div class="error-block"' + tap + '>' +
         '<div class="error-icon-wrap">' +
-          /* 白い ! マーク (太め・丸底) をSVGで再現 */
           '<svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">' +
             '<rect x="15.5" y="7" width="5" height="16" rx="2.5" fill="white"/>' +
             '<circle cx="18" cy="28.5" r="2.8" fill="white"/>' +
@@ -739,12 +728,11 @@ function goTrending() {
 }
 
 /* ======================================================
-   RENDER VIDEO LIST  (汎用 — targetId で出力先を変える)
+   RENDER VIDEO LIST
 ====================================================== */
 function renderList(url, isVideo, targetId) {
     var el = document.getElementById(targetId);
     el.innerHTML = '<div class="loading"><div class="spinner"></div>読み込み中...</div>';
-    // retryFn: targetIdに応じた再試行コマンドを生成
     var retryCall = 'renderList(\'' + url.replace(/'/g,"\\'") + '\',' + isVideo + ',\'' + targetId + '\')';
     get(url, function(data) {
         if (!data.items || !data.items.length) {
@@ -810,7 +798,6 @@ function openPlayer(id) {
     document.getElementById('yt-player-cont').innerHTML =
         '<iframe src="https://www.youtube.com/embed/' + id +
         '?autoplay=1&playsinline=1&rel=0" allow="autoplay;encrypted-media" allowfullscreen></iframe>';
-
 
     var vidRetry = 'openPlayer(\'' + id + '\')';
 
@@ -883,7 +870,6 @@ function openPlayer(id) {
         document.getElementById('comments-list').innerHTML = errHTML('openPlayer(\'' + id + '\')');
     });
 
-    // Build next list from current main feed
     setTimeout(function() {
         var items = document.querySelectorAll('#main-view .video-item');
         var html = ''; var cnt = 0;
@@ -956,7 +942,6 @@ function openCh(chId) {
             : '';
         document.getElementById('ch-page-subs').innerText = subs;
 
-        // Banner image
         var banner = document.getElementById('ch-banner');
         if (ch.brandingSettings && ch.brandingSettings.image && ch.brandingSettings.image.bannerExternalUrl) {
             banner.style.backgroundImage = 'url(' + ch.brandingSettings.image.bannerExternalUrl + ')';
@@ -1066,7 +1051,6 @@ function setupShortsScroll(total) {
     feed.addEventListener('scroll', function() {
         var idx = Math.round(feed.scrollTop / window.innerHeight);
         if (idx === last || idx >= total) return;
-        // Toggle autoplay via src replacement
         var prevFr = document.querySelector('#ss-' + last + ' iframe');
         var currFr = document.querySelector('#ss-' + idx  + ' iframe');
         if (prevFr) prevFr.src = prevFr.src.replace('autoplay=1','autoplay=0');
@@ -1117,7 +1101,6 @@ function toggleDark() {
     isDark = !isDark;
     applyTheme();
     updateThemeUI();
-    // Persist to localStorage if available
     try { localStorage.setItem('yt_dark', isDark ? '1' : '0'); } catch(e){}
 }
 
@@ -1166,7 +1149,6 @@ function showCastToast() {
     setTimeout(function(){ if(toast.parentNode) toast.remove(); }, 2800);
 }
 
-/* CSS for toast animation */
 (function(){
     var s = document.createElement('style');
     s.textContent = '@keyframes fadeInDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}';
@@ -1177,7 +1159,6 @@ function showCastToast() {
    INIT
 ====================================================== */
 window.onload = function() {
-    // Restore saved theme
     try {
         if (localStorage.getItem('yt_dark') === '1') {
             isDark = true;
