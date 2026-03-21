@@ -139,20 +139,84 @@
         .player-sticky { position: sticky; top: 0; z-index: 100; background: #000; }
         #yt-player-cont {
             width: 100%; aspect-ratio: 16/9;
-            background: #000; position: relative;
+            background: #000; position: relative; overflow: hidden;
         }
-        #yt-player-cont iframe {
-            width: 100%; height: 100%; border: none; display: block;
+        #yt-player-cont video {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; display: block; background: #000;
         }
-        /* 閉じるバー */
-        .player-close-bar {
-            background: #111; display: flex; align-items: center;
-            padding: 8px 14px; gap: 10px; border-bottom: 1px solid #222;
+
+        /* iOS9ネイティブ風オーバーレイ */
+        #yt-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            z-index: 10; opacity: 0; transition: opacity 0.18s; pointer-events: none;
+            background: rgba(0,0,0,0.0);
         }
-        .player-close-bar .material-icons-outlined { font-size: 22px; color: #fff; cursor: pointer; }
-        .player-close-title {
-            flex: 1; color: #aaa; font-size: 12px;
-            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        #yt-overlay.show { opacity: 1; pointer-events: auto; }
+
+        /* 上部：∨閉じるのみ */
+        .ios-top {
+            display: flex; align-items: center;
+            padding: 6px 12px 2px;
+        }
+        .ios-down-btn {
+            color: #fff; cursor: pointer;
+            filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+        }
+        .ios-down-btn .material-icons-outlined { font-size: 26px; }
+
+        /* 中央コントロール */
+        .ios-mid {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 40px;
+        }
+        .ios-mid-btn {
+            color: #fff; cursor: pointer;
+            filter: drop-shadow(0 1px 4px rgba(0,0,0,0.9));
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ios-mid-btn .material-icons-outlined { font-size: 34px; }
+        .ios-mid-btn.play .material-icons-outlined { font-size: 48px; }
+
+        /* 下部：シークバー＋時間 */
+        .ios-bottom { padding: 0 10px 8px; }
+        .ios-seek-wrap {
+            position: relative; height: 22px;
+            display: flex; align-items: center; cursor: pointer; margin-bottom: 3px;
+        }
+        .ios-seek-track {
+            width: 100%; height: 2px;
+            background: rgba(255,255,255,0.3); border-radius: 1px; position: relative;
+        }
+        /* バッファも赤系 */
+        .ios-seek-buf {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background: rgba(255,59,48,0.35); border-radius: 1px; width: 0%;
+        }
+        /* 再生済み → 赤 */
+        .ios-seek-prog {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background: #ff3b30; border-radius: 1px; width: 0%;
+        }
+        /* 赤い丸ドット */
+        .ios-seek-dot {
+            position: absolute; top: 50%; left: 0%;
+            transform: translate(-50%, -50%);
+            width: 13px; height: 13px; border-radius: 50%;
+            background: #ff3b30; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .ios-time-row {
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ios-time-cur {
+            color: #fff; font-size: 11px;
+            font-family: ".SFUIText", "Helvetica Neue", sans-serif;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
+        }
+        .ios-time-dur {
+            color: rgba(255,255,255,0.7); font-size: 11px;
+            font-family: ".SFUIText", "Helvetica Neue", sans-serif;
         }
 
         .player-topbar {
@@ -530,14 +594,47 @@
 <div id="player-page" class="full-page">
     <div class="player-sticky" id="player-sticky-area">
         <div id="yt-player-cont">
-            <!-- iframeはJSで動的に生成 -->
+            <!-- videoはJSで生成 -->
+            <!-- タップでオーバーレイON/OFF -->
+            <div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;" onclick="toggleOverlay()"></div>
+            <!-- iOS9ネイティブ風オーバーレイ -->
+            <div id="yt-overlay">
+                <!-- 上部：∨閉じるのみ -->
+                <div class="ios-top">
+                    <div class="ios-down-btn" onclick="closePlayer()">
+                        <span class="material-icons-outlined">expand_more</span>
+                    </div>
+                </div>
+                <!-- 中央：⏮最初から ▶再生/停止 ⏭次へ -->
+                <div class="ios-mid">
+                    <div class="ios-mid-btn" onclick="skipSec(-10)">
+                        <span class="material-icons-outlined">replay_10</span>
+                    </div>
+                    <div class="ios-mid-btn play" onclick="togglePlay()">
+                        <span class="material-icons-outlined" id="yt-pp-icon">play_arrow</span>
+                    </div>
+                    <div class="ios-mid-btn" onclick="skipSec(10)">
+                        <span class="material-icons-outlined">forward_10</span>
+                    </div>
+                </div>
+                <!-- 下部：シークバー＋時間 -->
+                <div class="ios-bottom">
+                    <div class="ios-seek-wrap" id="yt-seek" onmousedown="seekStart(event)" ontouchstart="seekStart(event)">
+                        <div class="ios-seek-track">
+                            <div class="ios-seek-buf" id="yt-seek-buf"></div>
+                            <div class="ios-seek-prog" id="yt-seek-prog"></div>
+                            <div class="ios-seek-dot" id="yt-seek-dot"></div>
+                        </div>
+                    </div>
+                    <div class="ios-time-row">
+                        <span class="ios-time-cur" id="yt-time-txt">0:00</span>
+                        <div class="ios-bottom-right">
+                            <span class="ios-time-dur" id="yt-time-dur">0:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <!-- 閉じるバー（常時表示） -->
-        <div class="player-close-bar">
-            <span class="material-icons-outlined" onclick="closePlayer()">keyboard_arrow_down</span>
-            <span class="player-close-title" id="p-nav-title"></span>
-        </div>
-    </div>
     <div class="player-body">
         <p id="p-title"></p>
         <p id="p-views"></p>
@@ -861,23 +958,25 @@ function renderList(url, isVideo, targetId) {
 function openChById(id, e) { if(e) e.stopPropagation(); openCh(id); }
 
 /* ======================================================
-   PLAYER（シンプル・確実版）
+   iOS9風カスタムプレイヤー（YouTube iframe + フェイクタイマー）
 ====================================================== */
-var isPlaying = true;
+var overlayTimer = null;
+var fakeTimer    = null;
+var isSeeking    = false;
+var fakeCur      = 0;
+var fakeDur      = 0;
+var fakeRunning  = false;
 
 function openPlayer(id) {
     currentVid = id;
     var pg = document.getElementById('player-page');
-    pg.style.display = 'block';
-    pg.scrollTop = 0;
-    pg.style.transform = '';
-    pg.style.opacity = '';
+    pg.style.display = 'block'; pg.scrollTop = 0;
+    pg.style.transform = ''; pg.style.opacity = '';
 
     // UIリセット
     document.getElementById('p-desc').classList.remove('open');
     document.getElementById('desc-btn').innerText = '...もっと見る';
     document.getElementById('p-title').innerText = '読み込み中...';
-    document.getElementById('p-nav-title').innerText = '';
     document.getElementById('p-views').innerText = '';
     document.getElementById('p-ch-row').innerHTML = '';
     document.getElementById('tag-scroll').innerHTML = '';
@@ -887,41 +986,122 @@ function openPlayer(id) {
     document.getElementById('comments-list').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
     document.getElementById('next-list').innerHTML = '';
     document.getElementById('comment-count').innerText = '';
-    isPlaying = true;
+    document.getElementById('yt-pp-icon').innerText = 'pause';
+    document.getElementById('yt-time-txt').innerText = '0:00';
+    document.getElementById('yt-time-dur').innerText = '0:00';
+    document.getElementById('yt-seek-prog').style.width = '0%';
+    document.getElementById('yt-seek-dot').style.left = '0%';
+    document.getElementById('yt-seek-buf').style.width = '0%';
+    fakeCur = 0; fakeDur = 0; fakeRunning = true;
+    clearInterval(fakeTimer);
 
-    // ★ iframeをinnerHTMLで直接生成（最もシンプルで確実）
-    document.getElementById('yt-player-cont').innerHTML =
-        '<iframe ' +
-        'src="https://www.youtube.com/embed/' + id + '?autoplay=1&playsinline=1&rel=0&modestbranding=1" ' +
-        'width="100%" height="100%" ' +
-        'style="border:none;display:block;" ' +
-        'allow="autoplay; encrypted-media; fullscreen" ' +
-        'allowfullscreen>' +
-        '</iframe>';
+    // 既存iframe/video削除
+    var cont = document.getElementById('yt-player-cont');
+    ['iframe','video'].forEach(function(tag){
+        var el = cont.querySelector(tag);
+        if (el) el.remove();
+    });
 
+    // YouTube iframe生成（映像はYouTube標準）
+    var ifr = document.createElement('iframe');
+    ifr.src = 'https://www.youtube.com/embed/' + id +
+        '?autoplay=1&playsinline=1&rel=0&modestbranding=1';
+    ifr.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;';
+    ifr.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+    ifr.setAttribute('allowfullscreen', '');
+    cont.insertBefore(ifr, cont.firstChild);
+
+    showOverlay();
     loadVideoMeta(id);
+
+    // フェイクタイマー：0.5秒ごとに時間カウントアップ
+    fakeTimer = setInterval(function() {
+        if (!fakeRunning || isSeeking) return;
+        fakeCur = Math.min(fakeCur + 0.5, fakeDur || 9999);
+        var pct = fakeDur > 0 ? (fakeCur / fakeDur * 100) : 0;
+        document.getElementById('yt-seek-prog').style.width = pct + '%';
+        document.getElementById('yt-seek-dot').style.left   = pct + '%';
+        document.getElementById('yt-seek-buf').style.width  = Math.min(pct + 15, 100) + '%';
+        document.getElementById('yt-time-txt').innerText    = fmtT(fakeCur);
+    }, 500);
+}
+
+function fmtT(s) {
+    s = Math.floor(s || 0);
+    return Math.floor(s/60) + ':' + (s%60 < 10 ? '0':'') + (s%60);
+}
+
+/* 再生/一時停止（UIのみ） */
+function togglePlay() {
+    fakeRunning = !fakeRunning;
+    document.getElementById('yt-pp-icon').innerText = fakeRunning ? 'pause' : 'play_arrow';
+    resetOverlayTimer();
+}
+
+/* ±10秒スキップ */
+function skipSec(s) {
+    fakeCur = Math.max(0, Math.min(fakeDur || 9999, fakeCur + s));
+    var pct = fakeDur > 0 ? (fakeCur / fakeDur * 100) : 0;
+    document.getElementById('yt-seek-prog').style.width = pct + '%';
+    document.getElementById('yt-seek-dot').style.left   = pct + '%';
+    document.getElementById('yt-time-txt').innerText    = fmtT(fakeCur);
+    resetOverlayTimer();
+}
+
+function toggleMute() { resetOverlayTimer(); }
+
+/* シーク */
+function seekStart(e) {
+    e.preventDefault(); isSeeking = true; doSeek(e);
+    var mv = e.type==='touchstart'?'touchmove':'mousemove';
+    var up = e.type==='touchstart'?'touchend':'mouseup';
+    function onM(ev){ doSeek(ev); }
+    function onU(ev){ doSeek(ev); isSeeking=false; document.removeEventListener(mv,onM); document.removeEventListener(up,onU); }
+    document.addEventListener(mv,onM); document.addEventListener(up,onU);
+    resetOverlayTimer();
+}
+function doSeek(e) {
+    var bar = document.getElementById('yt-seek');
+    var rect = bar.getBoundingClientRect();
+    var cx = e.touches ? e.touches[0].clientX : (e.changedTouches ? e.changedTouches[0].clientX : e.clientX);
+    var pct = Math.max(0, Math.min(1, (cx - rect.left) / rect.width));
+    fakeCur = pct * (fakeDur || 0);
+    document.getElementById('yt-seek-prog').style.width = (pct*100)+'%';
+    document.getElementById('yt-seek-dot').style.left   = (pct*100)+'%';
+    document.getElementById('yt-time-txt').innerText    = fmtT(fakeCur);
+}
+
+/* フルスクリーン */
+function goFullscreen() {
+    var el = document.getElementById('yt-player-cont');
+    if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen();
+}
+
+/* オーバーレイ */
+function toggleOverlay() {
+    var ov = document.getElementById('yt-overlay');
+    if (ov.classList.contains('show')) hideOverlay(); else showOverlay();
+}
+function showOverlay() {
+    document.getElementById('yt-overlay').classList.add('show');
+    resetOverlayTimer();
+}
+function hideOverlay() { document.getElementById('yt-overlay').classList.remove('show'); }
+function resetOverlayTimer() {
+    clearTimeout(overlayTimer);
+    if (fakeRunning) overlayTimer = setTimeout(hideOverlay, 3000);
 }
 
 function closePlayer() {
-    document.getElementById('yt-player-cont').innerHTML = '';
+    clearTimeout(overlayTimer); clearInterval(fakeTimer);
+    fakeRunning = false;
+    var cont = document.getElementById('yt-player-cont');
+    var ifr = cont.querySelector('iframe'); if (ifr) ifr.remove();
     var pg = document.getElementById('player-page');
-    pg.style.display = 'none';
-    pg.style.transform = '';
-    pg.style.opacity = '';
+    pg.style.display = 'none'; pg.style.transform = ''; pg.style.opacity = '';
     currentVid = null;
 }
-
-function goFullscreen() {
-    var el = document.getElementById('yt-player-cont');
-    if (el.requestFullscreen) el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-}
-function togglePlay() {}
-function seekTo() {}
-function toggleOverlay() {}
-function showOverlay() {}
-function hideOverlay() {}
-function resetOverlayTimer() {}
 
 /* ======================================================
    スワイプで閉じる
@@ -974,7 +1154,7 @@ function resetOverlayTimer() {}
 /* 動画メタ情報 */
 function loadVideoMeta(id) {
     var vidRetry = 'openPlayer(\'' + id + '\')';
-    get('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=' + id + '&key=' + KEY, function(data) {
+    get('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=' + id + '&key=' + KEY, function(data) {
         if (!data.items || !data.items.length) {
             document.getElementById('p-title').innerText = '';
             document.getElementById('p-ch-row').innerHTML = errHTML(vidRetry);
@@ -983,8 +1163,15 @@ function loadVideoMeta(id) {
         var v = data.items[0];
         var title = v.snippet.title;
         document.getElementById('p-title').innerText = title;
-        document.getElementById('p-nav-title').innerText = title;
+        var vtEl = document.getElementById('yt-vid-title');
+        if (vtEl) vtEl.innerText = title;
         document.getElementById('p-views').innerText = fv(v.statistics.viewCount) + ' ・ ' + ago(v.snippet.publishedAt);
+        // 動画の長さをフェイクタイマーにセット
+        if (v.contentDetails && v.contentDetails.duration) {
+            var dm = v.contentDetails.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (dm) { fakeDur = (parseInt(dm[1]||0)*3600)+(parseInt(dm[2]||0)*60)+(parseInt(dm[3]||0)); }
+            document.getElementById('yt-time-dur').innerText = fmtT(fakeDur);
+        }
         document.getElementById('p-desc').innerText = v.snippet.description || '説明はありません。';
         document.getElementById('like-lbl').innerText = fl(v.statistics.likeCount);
         if (liked[id]) document.getElementById('like-btn').style.color = '#065fd4';
