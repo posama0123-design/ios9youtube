@@ -143,9 +143,10 @@
             width: 100%; aspect-ratio: 16/9;
             background: #000; position: relative; overflow: hidden;
         }
+        /* iframeはタッチ受付ON（再生できるように） */
         #yt-player-cont iframe {
             width: 100%; height: 100%; border: none; display: block;
-            pointer-events: none; /* タッチ操作を独自UIで受ける */
+            pointer-events: auto;
         }
 
         /* ===== iOS9風 プレイヤーオーバーレイ ===== */
@@ -172,6 +173,7 @@
         .yt-back-btn {
             display: flex; align-items: center; gap: 4px;
             color: #fff; font-size: 14px; cursor: pointer;
+            padding: 4px 8px 4px 0;
         }
         .yt-back-btn .material-icons-outlined { font-size: 22px; }
         .yt-overlay-title {
@@ -179,7 +181,7 @@
             flex: 1; text-align: center; overflow: hidden;
             white-space: nowrap; text-overflow: ellipsis; padding: 0 8px;
         }
-        .yt-more-btn { color: #fff; cursor: pointer; }
+        .yt-more-btn { color: #fff; cursor: pointer; padding: 4px 0 4px 8px; }
         .yt-more-btn .material-icons-outlined { font-size: 22px; }
 
         /* 中央の再生/一時停止ボタン */
@@ -201,10 +203,10 @@
             padding: 20px 10px 8px;
         }
         /* シークバー */
-        .yt-seek-wrap { position: relative; height: 14px; display: flex; align-items: center; margin-bottom: 4px; }
+        .yt-seek-wrap { position: relative; height: 18px; display: flex; align-items: center; margin-bottom: 4px; cursor: pointer; }
         .yt-seek-track {
             width: 100%; height: 2px; background: rgba(255,255,255,0.35);
-            border-radius: 1px; position: relative; cursor: pointer;
+            border-radius: 1px; position: relative;
         }
         .yt-seek-played {
             height: 100%; background: #cc0000; border-radius: 1px;
@@ -214,17 +216,23 @@
         .yt-seek-thumb {
             width: 12px; height: 12px; border-radius: 50%; background: #cc0000;
             position: absolute; top: 50%; transform: translate(-50%, -50%);
-            left: 0%; cursor: pointer; transition: left 0.5s linear;
+            left: 0%; transition: left 0.5s linear;
         }
         /* 時間・フルスクリーン行 */
-        .yt-ctrl-row {
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .yt-time {
-            color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 0.5px;
-        }
+        .yt-ctrl-row { display: flex; align-items: center; justify-content: space-between; }
+        .yt-time { color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 0.5px; }
         .yt-fullscreen { color: #fff; cursor: pointer; }
         .yt-fullscreen .material-icons-outlined { font-size: 20px; }
+
+        /* 下スワイプ閉じるインジケーター */
+        .swipe-hint {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 36px; height: 4px; background: rgba(255,255,255,0.4);
+            border-radius: 2px; margin-top: 6px; z-index: 20;
+        }
+        /* スワイプ中のアニメーション */
+        #player-page { transition: transform 0.0s; }
+        #player-page.swiping { transition: none; }
 
         .player-topbar {
             display: flex; align-items: center; padding: 10px 12px;
@@ -599,21 +607,19 @@
 
 <!-- ===== PLAYER PAGE ===== -->
 <div id="player-page" class="full-page">
-    <div class="player-sticky">
+    <div class="player-sticky" id="player-sticky-area">
+        <!-- スワイプで閉じるヒント -->
+        <div class="swipe-hint"></div>
         <div id="yt-player-cont">
-            <!-- YouTube iframe (音声・映像) -->
-            <iframe id="yt-iframe"
-                src=""
-                allow="autoplay;encrypted-media"
-                allowfullscreen>
-            </iframe>
+            <!-- YouTube iframe -->
+            <iframe id="yt-iframe" src="" allow="autoplay;encrypted-media" allowfullscreen></iframe>
 
-            <!-- タップ受付レイヤー（常時） -->
+            <!-- タップ受付レイヤー -->
             <div class="yt-tap-layer" onclick="toggleOverlay()"></div>
 
             <!-- iOS9風オーバーレイUI -->
             <div class="yt-overlay" id="yt-overlay">
-                <!-- 上部：戻る・タイトル・メニュー -->
+                <!-- 上部 -->
                 <div class="yt-overlay-top">
                     <div class="yt-back-btn" onclick="closePlayer()">
                         <span class="material-icons-outlined">arrow_back_ios</span>
@@ -631,7 +637,7 @@
                     </div>
                 </div>
 
-                <!-- 下部：シークバー・時間・フルスクリーン -->
+                <!-- 下部：シークバー・時間 -->
                 <div class="yt-overlay-bottom">
                     <div class="yt-seek-wrap" id="yt-seek-wrap" onclick="seekTo(event)">
                         <div class="yt-seek-track">
@@ -647,6 +653,17 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- 閉じるボタン（プレイヤー直下・常時表示） -->
+        <div id="player-close-bar" style="
+            background:#000; display:flex; align-items:center; justify-content:space-between;
+            padding:6px 14px; border-bottom:1px solid #222;">
+            <div onclick="closePlayer()" style="display:flex;align-items:center;gap:6px;color:#fff;cursor:pointer;padding:4px 0;">
+                <span class="material-icons-outlined" style="font-size:20px;">expand_more</span>
+                <span style="font-size:13px;">閉じる</span>
+            </div>
+            <div id="p-nav-title" style="color:#aaa;font-size:12px;flex:1;text-align:right;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-left:12px;"></div>
         </div>
     </div>
     <div class="player-topbar" id="player-topbar" style="display:none;">
@@ -1057,9 +1074,7 @@ function buildYTPlayer(id) {
             playsinline: 1,
             rel: 0,
             modestbranding: 1,
-            controls: 0,      // ← 独自UIを使うのでYT標準コントロール非表示
-            disablekb: 1,
-            fs: 0
+            controls: 1   /* YouTube標準コントロール表示 */
         },
         events: {
             onReady: function(e) {
@@ -1084,6 +1099,60 @@ function buildYTPlayer(id) {
         }
     });
 }
+
+/* ======================================================
+   スワイプで閉じる（プレイヤーエリア下スワイプ）
+====================================================== */
+function initSwipeToClose() {
+    var area = document.getElementById('player-sticky-area');
+    var page = document.getElementById('player-page');
+    var startY = 0, startX = 0, dragging = false;
+
+    area.addEventListener('touchstart', function(e) {
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        dragging = true;
+        page.classList.add('swiping');
+    }, { passive: true });
+
+    area.addEventListener('touchmove', function(e) {
+        if (!dragging) return;
+        var dy = e.touches[0].clientY - startY;
+        var dx = e.touches[0].clientX - startX;
+        // 縦スワイプのみ反応（横は無視）
+        if (Math.abs(dx) > Math.abs(dy)) return;
+        if (dy > 0) {
+            page.style.transform = 'translateY(' + dy + 'px)';
+            page.style.opacity = Math.max(0.4, 1 - dy / 300);
+        }
+    }, { passive: true });
+
+    area.addEventListener('touchend', function(e) {
+        if (!dragging) return;
+        dragging = false;
+        var dy = e.changedTouches[0].clientY - startY;
+        page.classList.remove('swiping');
+        if (dy > 80) {
+            // 80px以上下にスワイプ → 閉じる
+            page.style.transition = 'transform 0.25s, opacity 0.25s';
+            page.style.transform = 'translateY(100%)';
+            page.style.opacity = '0';
+            setTimeout(function() {
+                closePlayer();
+                page.style.transition = '';
+                page.style.transform = '';
+                page.style.opacity = '';
+            }, 250);
+        } else {
+            // 戻す
+            page.style.transition = 'transform 0.2s, opacity 0.2s';
+            page.style.transform = '';
+            page.style.opacity = '';
+            setTimeout(function(){ page.style.transition = ''; }, 200);
+        }
+    }, { passive: true });
+}
+initSwipeToClose();
 
 /* シークバー・時間更新 */
 function startSeekTimer() {
