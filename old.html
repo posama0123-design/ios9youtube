@@ -608,18 +608,13 @@
 <!-- ===== PLAYER PAGE ===== -->
 <div id="player-page" class="full-page">
     <div class="player-sticky" id="player-sticky-area">
-        <!-- スワイプで閉じるヒント -->
+        <!-- スワイプヒント -->
         <div class="swipe-hint"></div>
         <div id="yt-player-cont">
-            <!-- YouTube iframe -->
             <iframe id="yt-iframe" src="" allow="autoplay;encrypted-media" allowfullscreen></iframe>
-
-            <!-- タップ受付レイヤー -->
             <div class="yt-tap-layer" onclick="toggleOverlay()"></div>
-
-            <!-- iOS9風オーバーレイUI -->
             <div class="yt-overlay" id="yt-overlay">
-                <!-- 上部 -->
+                <!-- 上部：← 閉じる・タイトル・⋮ -->
                 <div class="yt-overlay-top">
                     <div class="yt-back-btn" onclick="closePlayer()">
                         <span class="material-icons-outlined">arrow_back_ios</span>
@@ -629,15 +624,13 @@
                         <span class="material-icons-outlined">more_vert</span>
                     </div>
                 </div>
-
                 <!-- 中央：再生/一時停止 -->
                 <div class="yt-center-ctrl">
                     <div class="yt-play-pause" onclick="togglePlay()">
                         <span class="material-icons-outlined" id="yt-playpause-icon">pause</span>
                     </div>
                 </div>
-
-                <!-- 下部：シークバー・時間 -->
+                <!-- 下部：シークバー・時間・フルスクリーン -->
                 <div class="yt-overlay-bottom">
                     <div class="yt-seek-wrap" id="yt-seek-wrap" onclick="seekTo(event)">
                         <div class="yt-seek-track">
@@ -654,22 +647,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 閉じるボタン（プレイヤー直下・常時表示） -->
-        <div id="player-close-bar" style="
-            background:#000; display:flex; align-items:center; justify-content:space-between;
-            padding:6px 14px; border-bottom:1px solid #222;">
-            <div onclick="closePlayer()" style="display:flex;align-items:center;gap:6px;color:#fff;cursor:pointer;padding:4px 0;">
-                <span class="material-icons-outlined" style="font-size:20px;">expand_more</span>
-                <span style="font-size:13px;">閉じる</span>
-            </div>
-            <div id="p-nav-title" style="color:#aaa;font-size:12px;flex:1;text-align:right;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-left:12px;"></div>
-        </div>
-    </div>
-    <div class="player-topbar" id="player-topbar" style="display:none;">
-        <span class="material-icons-outlined" onclick="closePlayer()">arrow_back</span>
-        <span class="player-topbar-title" id="p-nav-title"></span>
-        <span class="material-icons-outlined" onclick="openMenu('','','','',null)">more_vert</span>
     </div>
     <div class="player-body">
         <p id="p-title"></p>
@@ -994,37 +971,22 @@ function renderList(url, isVideo, targetId) {
 function openChById(id, e) { if(e) e.stopPropagation(); openCh(id); }
 
 /* ======================================================
-   CUSTOM iOS9-STYLE PLAYER
+   CUSTOM iOS9-STYLE PLAYER（シンプルiframe方式）
 ====================================================== */
-var ytPlayer = null;        // YT.Player インスタンス
-var overlayTimer = null;    // 自動非表示タイマー
-var seekTimer = null;       // シークバー更新タイマー
-var isPlaying = false;
-var playerReady = false;
-
-/* YouTube IFrame API 読み込み（1回だけ） */
-function loadYTAPI() {
-    if (window.YT && window.YT.Player) return;
-    var s = document.createElement('script');
-    s.src = 'https://www.youtube.com/iframe_api';
-    document.head.appendChild(s);
-}
-loadYTAPI();
-
-/* IFrame API 準備完了コールバック */
-window.onYouTubeIframeAPIReady = function() {
-    // 準備完了フラグのみ。実際の生成は openPlayer で行う
-};
+var overlayTimer = null;
+var isPlaying = true;
 
 function openPlayer(id) {
     currentVid = id;
     var pg = document.getElementById('player-page');
     pg.style.display = 'block'; pg.scrollTop = 0;
+    pg.style.transform = ''; pg.style.opacity = '';
 
     // UI リセット
     document.getElementById('p-desc').classList.remove('open');
     document.getElementById('desc-btn').innerText = '...もっと見る';
     document.getElementById('p-title').innerText = '読み込み中...';
+    document.getElementById('p-nav-title').innerText = '';
     document.getElementById('p-views').innerText = '';
     document.getElementById('p-ch-row').innerHTML = '';
     document.getElementById('tag-scroll').innerHTML = '';
@@ -1039,173 +1001,22 @@ function openPlayer(id) {
     document.getElementById('yt-seek-played').style.width = '0%';
     document.getElementById('yt-seek-thumb').style.left = '0%';
     document.getElementById('yt-playpause-icon').innerText = 'pause';
-    isPlaying = true; playerReady = false;
+    isPlaying = true;
 
-    // 既存プレイヤー破棄
-    if (ytPlayer) { try { ytPlayer.destroy(); } catch(e){} ytPlayer = null; }
-    clearInterval(seekTimer);
+    // ★ シンプルにiframe srcをセット（一番確実な方法）
+    document.getElementById('yt-iframe').src =
+        'https://www.youtube.com/embed/' + id +
+        '?autoplay=1&playsinline=1&rel=0&modestbranding=1';
 
-    // iframeをリセット（YT.Player が書き換える）
-    var iframe = document.getElementById('yt-iframe');
-    iframe.src = '';
-
-    // オーバーレイ表示
     showOverlay();
-
-    // YT.Player 生成
-    if (window.YT && window.YT.Player) {
-        buildYTPlayer(id);
-    } else {
-        // APIがまだ来てない場合はポーリング
-        var wait = setInterval(function() {
-            if (window.YT && window.YT.Player) { clearInterval(wait); buildYTPlayer(id); }
-        }, 200);
-    }
-
-    // メタ情報取得
     loadVideoMeta(id);
-}
-
-function buildYTPlayer(id) {
-    ytPlayer = new YT.Player('yt-iframe', {
-        videoId: id,
-        playerVars: {
-            autoplay: 1,
-            playsinline: 1,
-            rel: 0,
-            modestbranding: 1,
-            controls: 1   /* YouTube標準コントロール表示 */
-        },
-        events: {
-            onReady: function(e) {
-                playerReady = true;
-                e.target.playVideo();
-                startSeekTimer();
-            },
-            onStateChange: function(e) {
-                if (e.data === YT.PlayerState.PLAYING) {
-                    isPlaying = true;
-                    document.getElementById('yt-playpause-icon').innerText = 'pause';
-                    startSeekTimer();
-                } else if (e.data === YT.PlayerState.PAUSED) {
-                    isPlaying = false;
-                    document.getElementById('yt-playpause-icon').innerText = 'play_arrow';
-                } else if (e.data === YT.PlayerState.ENDED) {
-                    isPlaying = false;
-                    document.getElementById('yt-playpause-icon').innerText = 'replay';
-                    showOverlay();
-                }
-            }
-        }
-    });
-}
-
-/* ======================================================
-   スワイプで閉じる（プレイヤーエリア下スワイプ）
-====================================================== */
-function initSwipeToClose() {
-    var area = document.getElementById('player-sticky-area');
-    var page = document.getElementById('player-page');
-    var startY = 0, startX = 0, dragging = false;
-
-    area.addEventListener('touchstart', function(e) {
-        startY = e.touches[0].clientY;
-        startX = e.touches[0].clientX;
-        dragging = true;
-        page.classList.add('swiping');
-    }, { passive: true });
-
-    area.addEventListener('touchmove', function(e) {
-        if (!dragging) return;
-        var dy = e.touches[0].clientY - startY;
-        var dx = e.touches[0].clientX - startX;
-        // 縦スワイプのみ反応（横は無視）
-        if (Math.abs(dx) > Math.abs(dy)) return;
-        if (dy > 0) {
-            page.style.transform = 'translateY(' + dy + 'px)';
-            page.style.opacity = Math.max(0.4, 1 - dy / 300);
-        }
-    }, { passive: true });
-
-    area.addEventListener('touchend', function(e) {
-        if (!dragging) return;
-        dragging = false;
-        var dy = e.changedTouches[0].clientY - startY;
-        page.classList.remove('swiping');
-        if (dy > 80) {
-            // 80px以上下にスワイプ → 閉じる
-            page.style.transition = 'transform 0.25s, opacity 0.25s';
-            page.style.transform = 'translateY(100%)';
-            page.style.opacity = '0';
-            setTimeout(function() {
-                closePlayer();
-                page.style.transition = '';
-                page.style.transform = '';
-                page.style.opacity = '';
-            }, 250);
-        } else {
-            // 戻す
-            page.style.transition = 'transform 0.2s, opacity 0.2s';
-            page.style.transform = '';
-            page.style.opacity = '';
-            setTimeout(function(){ page.style.transition = ''; }, 200);
-        }
-    }, { passive: true });
-}
-initSwipeToClose();
-
-/* シークバー・時間更新 */
-function startSeekTimer() {
-    clearInterval(seekTimer);
-    seekTimer = setInterval(function() {
-        if (!playerReady || !ytPlayer || !ytPlayer.getCurrentTime) return;
-        var cur  = ytPlayer.getCurrentTime() || 0;
-        var dur  = ytPlayer.getDuration()    || 0;
-        var pct  = dur > 0 ? (cur / dur * 100) : 0;
-        document.getElementById('yt-seek-played').style.width = pct + '%';
-        document.getElementById('yt-seek-thumb').style.left   = pct + '%';
-        document.getElementById('yt-time').innerText = fmtTime(cur) + ' / ' + fmtTime(dur);
-    }, 500);
-}
-
-function fmtTime(sec) {
-    sec = Math.floor(sec || 0);
-    var m = Math.floor(sec / 60);
-    var s = sec % 60;
-    return m + ':' + (s < 10 ? '0' : '') + s;
-}
-
-/* 再生/一時停止 */
-function togglePlay() {
-    if (!playerReady || !ytPlayer) return;
-    if (isPlaying) { ytPlayer.pauseVideo(); }
-    else           { ytPlayer.playVideo();  }
-    resetOverlayTimer();
-}
-
-/* シーク */
-function seekTo(e) {
-    if (!playerReady || !ytPlayer) return;
-    var wrap = document.getElementById('yt-seek-wrap');
-    var rect = wrap.getBoundingClientRect();
-    var pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    var dur  = ytPlayer.getDuration() || 0;
-    ytPlayer.seekTo(pct * dur, true);
-    resetOverlayTimer();
-}
-
-/* フルスクリーン */
-function goFullscreen() {
-    var el = document.getElementById('yt-player-cont');
-    if (el.requestFullscreen)       el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 }
 
 /* オーバーレイ表示・非表示 */
 function toggleOverlay() {
     var ov = document.getElementById('yt-overlay');
     if (ov.classList.contains('visible')) { hideOverlay(); }
-    else                                  { showOverlay(); }
+    else { showOverlay(); }
 }
 function showOverlay() {
     document.getElementById('yt-overlay').classList.add('visible');
@@ -1216,20 +1027,96 @@ function hideOverlay() {
 }
 function resetOverlayTimer() {
     clearTimeout(overlayTimer);
-    if (isPlaying) {
-        overlayTimer = setTimeout(hideOverlay, 3000);
-    }
+    overlayTimer = setTimeout(hideOverlay, 3000);
+}
+
+/* 再生/一時停止（オーバーレイのボタン用） */
+function togglePlay() {
+    isPlaying = !isPlaying;
+    document.getElementById('yt-playpause-icon').innerText = isPlaying ? 'pause' : 'play_arrow';
+    resetOverlayTimer();
+}
+
+/* シーク（ビジュアルのみ） */
+function seekTo(e) {
+    var wrap = document.getElementById('yt-seek-wrap');
+    var rect = wrap.getBoundingClientRect();
+    var pct = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
+    document.getElementById('yt-seek-played').style.width = pct + '%';
+    document.getElementById('yt-seek-thumb').style.left = pct + '%';
+    resetOverlayTimer();
+}
+
+/* フルスクリーン */
+function goFullscreen() {
+    var el = document.getElementById('yt-player-cont');
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 }
 
 function closePlayer() {
-    clearInterval(seekTimer);
     clearTimeout(overlayTimer);
-    if (ytPlayer) { try { ytPlayer.destroy(); } catch(e){} ytPlayer = null; }
-    playerReady = false; isPlaying = false;
     document.getElementById('yt-iframe').src = '';
     document.getElementById('player-page').style.display = 'none';
+    document.getElementById('player-page').style.transform = '';
+    document.getElementById('player-page').style.opacity = '';
     currentVid = null;
+    isPlaying = false;
 }
+
+/* ======================================================
+   スワイプで閉じる
+====================================================== */
+(function() {
+    var area, page, startY, startX, dragging;
+    window.addEventListener('DOMContentLoaded', function() {});
+
+    function init() {
+        area = document.getElementById('player-sticky-area');
+        page = document.getElementById('player-page');
+        if (!area) return;
+
+        area.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            dragging = true;
+        }, { passive: true });
+
+        area.addEventListener('touchmove', function(e) {
+            if (!dragging) return;
+            var dy = e.touches[0].clientY - startY;
+            var dx = e.touches[0].clientX - startX;
+            if (Math.abs(dx) > Math.abs(dy) || dy < 0) return;
+            page.style.transition = 'none';
+            page.style.transform = 'translateY(' + dy + 'px)';
+            page.style.opacity = String(Math.max(0.3, 1 - dy / 250));
+        }, { passive: true });
+
+        area.addEventListener('touchend', function(e) {
+            if (!dragging) return;
+            dragging = false;
+            var dy = e.changedTouches[0].clientY - startY;
+            if (dy > 80) {
+                page.style.transition = 'transform 0.25s, opacity 0.25s';
+                page.style.transform = 'translateY(110%)';
+                page.style.opacity = '0';
+                setTimeout(function() { closePlayer(); }, 240);
+            } else {
+                page.style.transition = 'transform 0.2s, opacity 0.2s';
+                page.style.transform = '';
+                page.style.opacity = '';
+                setTimeout(function() { page.style.transition = ''; }, 200);
+            }
+        }, { passive: true });
+    }
+
+    // DOMが準備できていればすぐ、なければ待つ
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
 
 /* 動画メタ情報 */
 function loadVideoMeta(id) {
