@@ -4,197 +4,244 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="image_14fcbc.png?v=fixed_final">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <title>YouTube</title>
+    <title>YouTube Mobile (iPhone 4s Optimized)</title>
     <style>
-        body { background: #f1f1f1; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0; padding-top: 52px; padding-bottom: 50px; }
-        .header { position: fixed; top: 0; width: 100%; height: 52px; background: #fff; border-bottom: 1px solid #e2e2e2; z-index: 10000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; }
-        .logo-img { height: 22px; }
-        .video-item { background: #fff; border-bottom: 8px solid #f1f1f1; }
-        .thumb-cont { width: 100%; position: relative; padding-top: 56.25%; background: #000; }
-        .thumb-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .v-detail { padding: 12px; display: flex; }
-        .v-avatar { width: 36px; height: 36px; border-radius: 18px; margin-right: 12px; background: #eee; flex-shrink: 0; overflow: hidden; }
-        .v-title { font-size: 14px; font-weight: bold; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 20000; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .player-fixed-cont { position: sticky; top: 0; z-index: 20001; background: #000; }
-        .action-bar { display: flex; justify-content: space-around; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .action-btn { display: flex; flex-direction: column; align-items: center; color: #606060; font-size: 10px; }
-        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 50px; background: #fff; border-top: 1px solid #d2d2d2; display: flex; z-index: 30000; }
-        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #606060; font-size: 10px; }
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --bg: #f1f1f1; --surface: #ffffff; --border: #e2e2e2; --border2: #eeeeee;
+            --text: #030303; --text2: #606060; --text3: #909090; --chip-bg: #f1f1f1;
+            --chip-text: #333333; --chip-active-bg: #333333; --chip-active-text: #ffffff;
+            --input-bg: #f1f1f1; --desc-bg: #fafafa; --sec-bg: #f1f1f1; --red: #cc0000;
+            --tab-active: #cc0000; --icon-color: #333333; --shadow: rgba(0,0,0,0.1);
+        }
+        body.dark {
+            --bg: #0f0f0f; --surface: #212121; --border: #383838; --border2: #2e2e2e;
+            --text: #f1f1f1; --text2: #aaaaaa; --text3: #717171; --chip-bg: #383838;
+            --chip-text: #f1f1f1; --chip-active-bg: #f1f1f1; --chip-active-text: #0f0f0f;
+            --input-bg: #383838; --desc-bg: #181818; --sec-bg: #181818; --red: #ff4444;
+            --tab-active: #ff4444; --icon-color: #f1f1f1; --shadow: rgba(0,0,0,0.5);
+        }
 
-        /* 🆕 ミニプレイヤー用スタイル */
-        #mini-player { display: none; position: fixed; bottom: 60px; right: 10px; width: 160px; aspect-ratio: 16/9; background: #000; z-index: 40000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
-        #mini-close { position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.5); color: #fff; padding: 2px; font-size: 16px; z-index: 40001; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body {
+            background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding-top: 48px; padding-bottom: 50px; color: var(--text); transition: background 0.2s;
+            -webkit-user-select: none; overflow-x: hidden;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            position: fixed; top: 0; width: 100%; height: 48px; background: var(--surface);
+            border-bottom: 1px solid var(--border); z-index: 1000; display: flex;
+            align-items: center; justify-content: space-between; padding: 0 10px;
+        }
+        .logo-img { height: 16px; }
+        body.dark .logo-img { filter: invert(1) brightness(2); }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right .material-icons-outlined { font-size: 22px; color: var(--icon-color); }
+
+        /* ===== CATEGORY BAR (iPhone 4s 対応) ===== */
+        .cat-bar {
+            position: sticky; top: 48px; background: var(--surface); border-bottom: 1px solid var(--border);
+            z-index: 900; display: flex; overflow-x: auto; padding: 6px 8px; gap: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .cat-bar::-webkit-scrollbar { display: none; }
+        .chip {
+            flex-shrink: 0; padding: 4px 12px; border-radius: 16px; font-size: 11px;
+            font-weight: 500; background: var(--chip-bg); color: var(--chip-text); border: none;
+        }
+        .chip.active { background: var(--chip-active-bg); color: var(--chip-active-text); }
+
+        /* ===== VIDEO LIST ===== */
+        .video-item { background: var(--surface); border-bottom: 6px solid var(--bg); }
+        .thumb-wrap { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .v-detail { padding: 8px; display: flex; gap: 8px; }
+        .v-ch-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--chip-bg); }
+        .v-ch-avatar img { width: 100%; height: 100%; }
+        .v-info { flex: 1; min-width: 0; }
+        .v-title { font-size: 13px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .v-meta { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+        /* ===== PLAYER PAGE (iPhone 4s 対応) ===== */
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--surface); z-index: 2000; overflow-y: auto; }
+        .player-sticky { position: sticky; top: 0; z-index: 100; background: #000; width: 100%; aspect-ratio: 16/9; }
+        .player-sticky iframe { width: 100%; height: 100%; border: none; }
+        .player-body { padding: 10px; }
+        #p-title { font-size: 15px; font-weight: 700; line-height: 1.3; }
+        #p-views { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+        .action-bar { display: flex; overflow-x: auto; border-bottom: 1px solid var(--border2); }
+        .act-btn { flex: 1; min-width: 60px; display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 2px; color: var(--text); font-size: 9px; }
+        .act-btn .material-icons-outlined { font-size: 20px; }
+
+        /* ===== TAB BAR ===== */
+        .tab-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 48px; background: var(--surface);
+            border-top: 1px solid var(--border); display: flex; z-index: 1000;
+        }
+        .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); font-size: 9px; gap: 2px; }
+        .tab-item.active { color: var(--tab-active); }
+        .tab-item .material-icons-outlined { font-size: 20px; }
+
+        /* ===== SETTINGS (iPhone 4s 対応) ===== */
+        .settings-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; }
+        .settings-sheet { position: absolute; bottom: 0; width: 100%; background: var(--surface); border-radius: 12px 12px 0 0; padding-bottom: 20px; }
+        .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border2); }
+        .settings-label { font-size: 14px; font-weight: 500; }
+
+        /* Toggle Switch */
+        .toggle { width: 40px; height: 20px; background: #ccc; border-radius: 10px; position: relative; transition: 0.2s; }
+        .toggle.on { background: var(--red); }
+        .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: 0.2s; }
+        .toggle.on::after { transform: translateX(20px); }
+
+        /* 検索バー */
+        .search-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 48px; background: var(--surface); z-index: 1100; align-items: center; padding: 0 10px; gap: 8px; }
+        .search-overlay input { flex: 1; height: 32px; border: none; background: var(--input-bg); padding: 0 10px; border-radius: 4px; color: var(--text); outline: none; font-size: 14px; }
+
+        .loading { padding: 40px; text-align: center; font-size: 12px; color: var(--text3); }
+        .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div onclick="location.reload()"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img"></div>
-    <span class="material-icons-outlined" style="font-size:24px;" onclick="doSearch()">search</span>
-</div>
-
-<div id="main-view"></div>
-
-<div id="mini-player" onclick="restorePlayer()">
-    <div id="mini-close" onclick="event.stopPropagation(); stopMiniPlayer();">×</div>
-    <div id="mini-video-cont" style="width:100%; height:100%;"></div>
-</div>
-
-<div id="channel-page" class="full-page">
-    <div style="padding:20px; text-align:center; background:#fafafa; border-bottom:1px solid #eee;">
-        <div style="width:60px; height:60px; border-radius:30px; background:#ccc; margin:0 auto 10px;"></div>
-        <h2 id="ch-name" style="margin:0; font-size:18px;"></h2>
-        <div style="background:#cc0000; color:#fff; padding:6px 15px; border-radius:2px; display:inline-block; margin-top:10px; font-size:13px; font-weight:bold;">登録済み</div>
+    <div class="header" id="main-header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" class="logo-img" onclick="goHome()">
+        <div class="header-right">
+            <span class="material-icons-outlined" onclick="openSearch()">search</span>
+            <span class="material-icons-outlined" onclick="openSettings()">account_circle</span>
+        </div>
     </div>
-    <div id="ch-video-list"></div>
-    <div style="padding:25px; text-align:center; color:#065fd4; font-weight:bold;" onclick="closeChannel()">✕ 戻る</div>
-</div>
 
-<div id="player-page" class="full-page">
-    <div class="player-fixed-cont"><div id="yt-player-cont" style="width:100%; aspect-ratio:16/9;"></div></div>
-    <div style="padding:12px;">
-        <p id="p-title" style="font-size:16px; font-weight:bold; margin:0;"></p>
-        <div id="p-ch-info" style="display:flex; align-items:center; margin-top:15px; padding:10px 0; border-top:1px solid #eee;"></div>
+    <div class="search-overlay" id="search-bar">
+        <span class="material-icons-outlined" onclick="closeSearch()">arrow_back</span>
+        <input type="text" id="search-input" placeholder="検索" onkeydown="if(event.keyCode===13)doSearch()">
     </div>
-    <div class="action-bar">
-        <div class="action-btn"><span class="material-icons-outlined">thumb_up</span><span>高評価</span></div>
-        <div class="action-btn"><span class="material-icons-outlined">thumb_down</span><span>低評価</span></div>
-        <div class="action-btn" onclick="shareVideo()"><span class="material-icons-outlined">share</span><span>共有</span></div>
-        <div class="action-btn" onclick="minimizePlayer()"><span class="material-icons-outlined">expand_more</span><span>閉じる</span></div>
-    </div>
-    <div id="real-comments" style="padding:12px; background:#fff;"></div>
-    <div style="padding:10px; background:#f1f1f1; font-size:14px; font-weight:bold;">次の動画</div>
-    <div id="next-videos-list"></div>
-</div>
 
-<div class="tab-bar">
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
-    <div class="tab-item" onclick="loadHome()"><span class="material-icons-outlined">local_fire_department</span><span>人気</span></div>
-    <div class="tab-item" onclick="closePlayer(); closeChannel();"><span class="material-icons-outlined">subscriptions</span><span>登録済</span></div>
-</div>
+    <div id="cat-bar-wrap"></div>
+    <div id="main-view"></div>
+
+    <div id="player-page" class="full-page">
+        <div class="player-sticky" id="yt-player-cont"></div>
+        <div class="player-body">
+            <div style="display:flex; justify-content: space-between; align-items: flex-start;">
+                <p id="p-title"></p>
+                <span class="material-icons-outlined" onclick="closePlayer()">expand_more</span>
+            </div>
+            <p id="p-views"></p>
+        </div>
+        <div class="action-bar">
+            <div class="act-btn"><span class="material-icons-outlined">thumb_up</span><span id="p-likes">高評価</span></div>
+            <div class="act-btn"><span class="material-icons-outlined">thumb_down</span><span>低評価</span></div>
+            <div class="act-btn"><span class="material-icons-outlined">share</span><span>共有</span></div>
+            <div class="act-btn"><span class="material-icons-outlined">playlist_add</span><span>保存</span></div>
+        </div>
+        <div id="next-list"></div>
+    </div>
+
+    <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()">
+        <div class="settings-sheet" onclick="event.stopPropagation()">
+            <div class="settings-row" onclick="toggleDark()">
+                <span class="settings-label">ダークモード</span>
+                <div class="toggle" id="dark-toggle"></div>
+            </div>
+            <div class="settings-row" onclick="closeSettings()">
+                <span class="settings-label">閉じる</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="goHome()"><span class="material-icons-outlined">home</span><span>ホーム</span></div>
+        <div class="tab-item"><span class="material-icons-outlined">bolt</span><span>ショート</span></div>
+        <div class="tab-item"><span class="material-icons-outlined">subscriptions</span><span>登録済み</span></div>
+        <div class="tab-item"><span class="material-icons-outlined">video_library</span><span>ライブラリ</span></div>
+    </div>
 
 <script>
-    var KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI';
-    var currentVideoId = '';
+    var KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI'; // 提供されたキーを維持
+    var isDark = false;
 
-    function ajaxGet(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4 && xhr.status === 200) { callback(JSON.parse(xhr.responseText)); }
-        };
-        xhr.send();
+    function goHome() {
+        buildCatBar('all');
+        loadVideos('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&maxResults=10&key=' + KEY);
     }
 
-    function loadHome() {
-        var cats = ['1', '20', '10', '17', '24']; 
-        var cat = cats[Math.floor(Math.random() * cats.length)];
-        var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=JP&videoCategoryId='+cat+'&maxResults=10&key=' + KEY;
-        renderList(url, 'main-view', true);
+    function buildCatBar(active) {
+        var cats = [{id:'all',l:'すべて'},{id:'20',l:'ゲーム'},{id:'10',l:'音楽'},{id:'28',l:'テック'}];
+        document.getElementById('cat-bar-wrap').innerHTML = '<div class="cat-bar">' + 
+            cats.map(c => `<div class="chip ${c.id===active?'active':''}" onclick="loadVideosByCat('${c.id}')">${c.l}</div>`).join('') + '</div>';
     }
 
-    function doSearch() {
-        var q = prompt("YouTube 検索");
-        if (q) {
-            var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(q)+'&type=video&maxResults=10&key='+KEY;
-            renderList(url, 'main-view', false);
-        }
+    function loadVideosByCat(id) {
+        buildCatBar(id);
+        var url = id === 'all' ? 
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=JP&maxResults=10&key=${KEY}` :
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&videoCategoryId=${id}&regionCode=JP&maxResults=10&key=${KEY}`;
+        loadVideos(url);
     }
 
-    function renderList(url, targetId, isVideoAPI) {
-        var target = document.getElementById(targetId);
-        target.innerHTML = '<div style="padding:20px; text-align:center;">読み込み中...</div>';
-        ajaxGet(url, function(data) {
-            var html = '';
-            for (var i = 0; i < data.items.length; i++) {
-                var v = data.items[i];
-                var videoId = isVideoAPI ? v.id : v.id.videoId;
-                if(!videoId || typeof videoId !== 'string') continue;
-                var title = v.snippet.title.replace(/'/g, "");
-                var chId = v.snippet.channelId;
-                var chName = v.snippet.channelTitle.replace(/'/g, "");
-                
-                html += '<div class="video-item">' +
-                        '<div class="thumb-cont" onclick="openPlayer(\''+videoId+'\',\''+title+'\',\''+chId+'\',\''+chName+'\')"><img src="'+v.snippet.thumbnails.high.url+'" class="thumb-img"></div>' +
-                        '<div class="v-detail">' +
-                        '<div class="v-avatar" onclick="openChannel(\''+chId+'\',\''+chName+'\')"></div>' +
-                        '<div onclick="openPlayer(\''+videoId+'\',\''+title+'\',\''+chId+'\',\''+chName+'\')">' +
-                        '<p class="v-title">'+v.snippet.title+'</p>' +
-                        '<p style="font-size:12px; color:#606060;">'+v.snippet.channelTitle+'</p></div></div></div>';
-            }
-            target.innerHTML = html;
+    function loadVideos(url) {
+        var view = document.getElementById('main-view');
+        view.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+        fetch(url).then(res => res.json()).then(data => {
+            view.innerHTML = data.items.map(v => `
+                <div class="video-item" onclick="openPlayer('${v.id}')">
+                    <div class="thumb-wrap"><img src="${v.snippet.thumbnails.medium.url}"></div>
+                    <div class="v-detail">
+                        <div class="v-ch-avatar"><img src="${v.snippet.thumbnails.default.url}"></div>
+                        <div class="v-info">
+                            <p class="v-title">${v.snippet.title}</p>
+                            <p class="v-meta">${v.snippet.channelTitle} • ${parseInt(v.statistics.viewCount).toLocaleString()}回</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         });
     }
 
-    function openPlayer(id, title, chId, chName) {
-        stopMiniPlayer();
-        currentVideoId = id;
+    function openPlayer(id) {
         document.getElementById('player-page').style.display = 'block';
-        document.getElementById('p-title').innerText = title;
-        document.getElementById('p-ch-info').innerHTML = 
-            '<div class="v-avatar" onclick="openChannel(\''+chId+'\',\''+chName+'\')"></div>' +
-            '<div onclick="openChannel(\''+chId+'\',\''+chName+'\')"><p style="margin:0; font-size:14px; font-weight:bold;">'+chName+'</p></div>';
-        document.getElementById('yt-player-cont').innerHTML = '<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&playsinline=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>';
-        
-        ajaxGet('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId='+id+'&maxResults=5&key='+KEY, function(data) {
-            var html = '';
-            if(data.items) {
-                for (var i = 0; i < data.items.length; i++) {
-                    var c = data.items[i].snippet.topLevelComment.snippet;
-                    html += '<div style="padding:10px; border-bottom:1px solid #eee; font-size:13px;"><b>'+c.authorDisplayName+'</b><br>'+c.textDisplay+'</div>';
-                }
-            }
-            document.getElementById('real-comments').innerHTML = html;
-        });
-        document.getElementById('next-videos-list').innerHTML = document.getElementById('main-view').innerHTML;
+        document.getElementById('yt-player-cont').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" allowfullscreen></iframe>`;
+        fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}&key=${KEY}`)
+            .then(res => res.json()).then(data => {
+                var v = data.items[0];
+                document.getElementById('p-title').innerText = v.snippet.title;
+                document.getElementById('p-views').innerText = `${parseInt(v.statistics.viewCount).toLocaleString()}回視聴`;
+                document.getElementById('p-likes').innerText = v.statistics.likeCount ? (parseInt(v.statistics.likeCount)/1000).toFixed(1)+'万' : '高評価';
+            });
     }
 
-    // 🆕 ミニプレイヤー化
-    function minimizePlayer() {
+    function closePlayer() {
         document.getElementById('player-page').style.display = 'none';
-        document.getElementById('mini-player').style.display = 'block';
-        document.getElementById('mini-video-cont').innerHTML = document.getElementById('yt-player-cont').innerHTML;
         document.getElementById('yt-player-cont').innerHTML = '';
     }
 
-    // 🆕 ミニプレイヤーから復帰
-    function restorePlayer() {
-        document.getElementById('player-page').style.display = 'block';
-        document.getElementById('mini-player').style.display = 'none';
-        document.getElementById('yt-player-cont').innerHTML = document.getElementById('mini-video-cont').innerHTML;
-        document.getElementById('mini-video-cont').innerHTML = '';
+    function openSearch() { document.getElementById('search-bar').style.display = 'flex'; document.getElementById('search-input').focus(); }
+    function closeSearch() { document.getElementById('search-bar').style.display = 'none'; }
+    function doSearch() {
+        var q = document.getElementById('search-input').value;
+        if(!q) return;
+        closeSearch();
+        loadVideos(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=10&key=${KEY}`);
     }
 
-    function stopMiniPlayer() {
-        document.getElementById('mini-player').style.display = 'none';
-        document.getElementById('mini-video-cont').innerHTML = '';
+    function openSettings() { document.getElementById('settings-overlay').style.display = 'block'; }
+    function closeSettings() { document.getElementById('settings-overlay').style.display = 'none'; }
+    
+    function toggleDark() {
+        isDark = !isDark;
+        document.body.classList.toggle('dark', isDark);
+        document.getElementById('dark-toggle').classList.toggle('on', isDark);
     }
 
-    // 🆕 共有機能
-    function shareVideo() {
-        var url = 'https://youtu.be/' + currentVideoId;
-        if (navigator.share) {
-            navigator.share({ title: document.getElementById('p-title').innerText, url: url });
-        } else {
-            prompt("動画リンクをコピー:", url);
-        }
-    }
-
-    function openChannel(chId, chName) {
-        // チャンネル移動時にミニプレイヤー化
-        if(document.getElementById('player-page').style.display === 'block') minimizePlayer();
-        document.getElementById('channel-page').style.display = 'block';
-        document.getElementById('ch-name').innerText = chName;
-        renderList('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId='+chId+'&type=video&maxResults=10&key='+KEY, 'ch-video-list', false);
-    }
-
-    function closePlayer() { stopMiniPlayer(); document.getElementById('player-page').style.display = 'none'; document.getElementById('yt-player-cont').innerHTML = ''; }
-    function closeChannel() { document.getElementById('channel-page').style.display = 'none'; }
-
-    window.onload = loadHome;
+    window.onload = goHome;
 </script>
 </body>
 </html>
