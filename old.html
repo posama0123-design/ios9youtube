@@ -138,101 +138,79 @@
         /* ===== PLAYER PAGE ===== */
         .player-sticky { position: sticky; top: 0; z-index: 100; background: #000; }
 
-        /* 独自プレイヤーコンテナ */
         #yt-player-cont {
             width: 100%; aspect-ratio: 16/9;
             background: #000; position: relative; overflow: hidden;
         }
-        /* iframeはタッチ受付ON（再生できるように） */
-        #yt-player-cont iframe {
-            width: 100%; height: 100%; border: none; display: block;
+        /* iframeはYouTube標準で再生処理 */
+        #yt-iframe-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #yt-iframe-wrap iframe {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; border: none;
             pointer-events: auto;
         }
+        /* タップ検知レイヤー（普段は透明でiframeのタッチを通さない） */
+        .yt-tap-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 9; pointer-events: auto; background: transparent;
+        }
+        /* オーバーレイ表示中はタップレイヤーを無効にしてiframeを操作可能に */
+        .yt-overlay.visible + .yt-tap-layer { pointer-events: none; }
 
-        /* ===== iOS9風 プレイヤーオーバーレイ ===== */
+        /* オーバーレイ */
         .yt-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10; display: flex; flex-direction: column;
             justify-content: space-between;
-            opacity: 0; transition: opacity 0.25s;
+            opacity: 0; transition: opacity 0.2s;
             pointer-events: none;
         }
         .yt-overlay.visible { opacity: 1; pointer-events: auto; }
-        /* タップ受付透明レイヤー（常に有効） */
-        .yt-tap-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9;
-        }
 
-        /* 上部グラデーション */
+        /* 上部 */
         .yt-overlay-top {
-            background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%);
-            padding: 8px 10px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+            padding: 10px 12px 24px;
             display: flex; align-items: center; justify-content: space-between;
         }
-        .yt-back-btn {
-            display: flex; align-items: center; gap: 4px;
-            color: #fff; font-size: 14px; cursor: pointer;
-            padding: 4px 8px 4px 0;
-        }
+        .yt-back-btn { color: #fff; cursor: pointer; padding: 4px 10px 4px 0; display: flex; align-items: center; }
         .yt-back-btn .material-icons-outlined { font-size: 22px; }
         .yt-overlay-title {
-            color: #fff; font-size: 13px; font-weight: 600;
-            flex: 1; text-align: center; overflow: hidden;
-            white-space: nowrap; text-overflow: ellipsis; padding: 0 8px;
+            flex: 1; color: #fff; font-size: 13px; font-weight: 600;
+            text-align: center; overflow: hidden; white-space: nowrap;
+            text-overflow: ellipsis; padding: 0 6px;
         }
-        .yt-more-btn { color: #fff; cursor: pointer; padding: 4px 0 4px 8px; }
+        .yt-more-btn { color: #fff; cursor: pointer; padding: 4px 0 4px 10px; }
         .yt-more-btn .material-icons-outlined { font-size: 22px; }
 
-        /* 中央の再生/一時停止ボタン */
-        .yt-center-ctrl {
-            display: flex; align-items: center; justify-content: center;
-            flex: 1;
-        }
+        /* 中央 */
+        .yt-center-ctrl { flex: 1; display: flex; align-items: center; justify-content: center; }
         .yt-play-pause {
-            width: 56px; height: 56px; border-radius: 50%;
-            background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.8);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
+            width: 54px; height: 54px; border-radius: 50%;
+            background: rgba(0,0,0,0.45); border: 2px solid rgba(255,255,255,0.85);
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
-        .yt-play-pause .material-icons-outlined { font-size: 32px; color: #fff; }
+        .yt-play-pause .material-icons-outlined { font-size: 30px; color: #fff; }
 
-        /* 下部コントロール */
+        /* 下部 */
         .yt-overlay-bottom {
-            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
-            padding: 20px 10px 8px;
+            background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
+            padding: 24px 12px 10px;
         }
-        /* シークバー */
-        .yt-seek-wrap { position: relative; height: 18px; display: flex; align-items: center; margin-bottom: 4px; cursor: pointer; }
-        .yt-seek-track {
-            width: 100%; height: 2px; background: rgba(255,255,255,0.35);
-            border-radius: 1px; position: relative;
-        }
-        .yt-seek-played {
-            height: 100%; background: #cc0000; border-radius: 1px;
-            position: absolute; top: 0; left: 0; width: 0%;
-            transition: width 0.5s linear;
-        }
-        .yt-seek-thumb {
-            width: 12px; height: 12px; border-radius: 50%; background: #cc0000;
-            position: absolute; top: 50%; transform: translate(-50%, -50%);
-            left: 0%; transition: left 0.5s linear;
-        }
-        /* 時間・フルスクリーン行 */
+        .yt-seek-wrap { position: relative; height: 20px; display: flex; align-items: center; cursor: pointer; margin-bottom: 4px; }
+        .yt-seek-track { width: 100%; height: 2px; background: rgba(255,255,255,0.3); border-radius: 1px; position: relative; }
+        .yt-seek-played { position: absolute; top: 0; left: 0; height: 100%; background: #cc0000; border-radius: 1px; width: 0%; }
+        .yt-seek-thumb { position: absolute; top: 50%; left: 0%; transform: translate(-50%,-50%); width: 12px; height: 12px; border-radius: 50%; background: #cc0000; }
         .yt-ctrl-row { display: flex; align-items: center; justify-content: space-between; }
-        .yt-time { color: #fff; font-size: 11px; font-family: monospace; letter-spacing: 0.5px; }
-        .yt-fullscreen { color: #fff; cursor: pointer; }
-        .yt-fullscreen .material-icons-outlined { font-size: 20px; }
+        .yt-time { color: #fff; font-size: 11px; font-family: monospace; }
+        .yt-fullscreen .material-icons-outlined { font-size: 20px; color: #fff; cursor: pointer; }
 
-        /* 下スワイプ閉じるインジケーター */
+        /* スワイプヒント */
         .swipe-hint {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 36px; height: 4px; background: rgba(255,255,255,0.4);
-            border-radius: 2px; margin-top: 6px; z-index: 20;
+            position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+            width: 32px; height: 3px; background: rgba(255,255,255,0.35);
+            border-radius: 2px; z-index: 20; pointer-events: none;
         }
-        /* スワイプ中のアニメーション */
-        #player-page { transition: transform 0.0s; }
-        #player-page.swiping { transition: none; }
 
         .player-topbar {
             display: flex; align-items: center; padding: 10px 12px;
@@ -608,13 +586,12 @@
 <!-- ===== PLAYER PAGE ===== -->
 <div id="player-page" class="full-page">
     <div class="player-sticky" id="player-sticky-area">
-        <!-- スワイプヒント -->
         <div class="swipe-hint"></div>
         <div id="yt-player-cont">
-            <iframe id="yt-iframe" src="" allow="autoplay;encrypted-media" allowfullscreen></iframe>
-            <div class="yt-tap-layer" onclick="toggleOverlay()"></div>
+            <!-- iframeはopenPlayer()で動的に生成 -->
+            <div id="yt-iframe-wrap"></div>
+            <div class="yt-tap-layer" id="yt-tap-layer" onclick="toggleOverlay()"></div>
             <div class="yt-overlay" id="yt-overlay">
-                <!-- 上部：← 閉じる・タイトル・⋮ -->
                 <div class="yt-overlay-top">
                     <div class="yt-back-btn" onclick="closePlayer()">
                         <span class="material-icons-outlined">arrow_back_ios</span>
@@ -624,13 +601,11 @@
                         <span class="material-icons-outlined">more_vert</span>
                     </div>
                 </div>
-                <!-- 中央：再生/一時停止 -->
                 <div class="yt-center-ctrl">
                     <div class="yt-play-pause" onclick="togglePlay()">
                         <span class="material-icons-outlined" id="yt-playpause-icon">pause</span>
                     </div>
                 </div>
-                <!-- 下部：シークバー・時間・フルスクリーン -->
                 <div class="yt-overlay-bottom">
                     <div class="yt-seek-wrap" id="yt-seek-wrap" onclick="seekTo(event)">
                         <div class="yt-seek-track">
@@ -1003,10 +978,16 @@ function openPlayer(id) {
     document.getElementById('yt-playpause-icon').innerText = 'pause';
     isPlaying = true;
 
-    // ★ シンプルにiframe srcをセット（一番確実な方法）
-    document.getElementById('yt-iframe').src =
-        'https://www.youtube.com/embed/' + id +
-        '?autoplay=1&playsinline=1&rel=0&modestbranding=1';
+    // iframeを毎回新規作成（srcセットより確実）
+    var wrap = document.getElementById('yt-iframe-wrap');
+    wrap.innerHTML = '';
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('allow', 'autoplay; encrypted-media');
+    ifr.setAttribute('allowfullscreen', '');
+    ifr.setAttribute('playsinline', '1');
+    ifr.src = 'https://www.youtube.com/embed/' + id +
+        '?autoplay=1&playsinline=1&rel=0&modestbranding=1&fs=1';
+    wrap.appendChild(ifr);
 
     showOverlay();
     loadVideoMeta(id);
@@ -1056,7 +1037,7 @@ function goFullscreen() {
 
 function closePlayer() {
     clearTimeout(overlayTimer);
-    document.getElementById('yt-iframe').src = '';
+    document.getElementById('yt-iframe-wrap').innerHTML = '';
     document.getElementById('player-page').style.display = 'none';
     document.getElementById('player-page').style.transform = '';
     document.getElementById('player-page').style.opacity = '';
@@ -1128,8 +1109,10 @@ function loadVideoMeta(id) {
             return;
         }
         var v = data.items[0];
-        document.getElementById('p-title').innerText = v.snippet.title;
-        document.getElementById('yt-overlay-title').innerText = v.snippet.title;
+        var title = v.snippet.title;
+        document.getElementById('p-title').innerText = title;
+        document.getElementById('p-nav-title').innerText = title;
+        document.getElementById('yt-overlay-title').innerText = title;
         document.getElementById('p-views').innerText = fv(v.statistics.viewCount) + ' ・ ' + ago(v.snippet.publishedAt);
         document.getElementById('p-desc').innerText = v.snippet.description || '説明はありません。';
         document.getElementById('like-lbl').innerText = fl(v.statistics.likeCount);
