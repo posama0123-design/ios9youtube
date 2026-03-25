@@ -2,128 +2,203 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>YouTube Legacy</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>YouTube</title>
     <style>
-        /* --- CSS: iOS 6/7対応レイアウト --- */
-        body, html { margin: 0; padding: 0; background-color: #f1f1f1; font-family: Helvetica, Arial, sans-serif; }
+        /* iOS 7特有の細いフォントとフラットデザイン */
+        body, html {
+            margin: 0; padding: 0;
+            background-color: #f1f1f1;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            -webkit-user-select: none;
+        }
+
+        /* 赤いヘッダー (iOS 7 Style) */
         #header {
-            background-color: white; height: 45px; width: 100%;
-            position: fixed; top: 0; left: 0; z-index: 1000;
-            border-bottom: 1px solid #ccc;
+            background-color: #e62117;
+            height: 44px;
+            width: 100%;
+            position: fixed; top: 0; z-index: 100;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        #header-logo { display: inline-block; margin: 8px 0 0 8px; vertical-align: top; }
-        #header-logo img { height: 24px; }
-        #search-bar { display: inline-block; margin: 7px 0 0 10px; vertical-align: top; }
-        #search-input { width: 160px; height: 24px; border: 1px solid #ccc; -webkit-appearance: none; }
 
-        #content { margin-top: 50px; padding: 5px; }
-        .video-item {
-            background-color: white; margin-bottom: 10px; padding: 5px;
-            border-bottom: 1px solid #ddd; overflow: hidden; /* clear float */
+        #logo {
+            float: left;
+            padding: 10px 0 0 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: -1px;
         }
-        .thumb-box { float: left; width: 120px; height: 90px; position: relative; background: #000; }
-        .thumb-box img { width: 100%; height: auto; }
-        .video-info { margin-left: 130px; }
-        .v-title { font-size: 13px; font-weight: bold; color: #333; margin-bottom: 4px; display: block; }
-        .v-meta { font-size: 11px; color: #777; }
 
-        #player-layer {
-            display: none; position: fixed; top: 45px; left: 0;
-            width: 100%; height: 200px; background: #000; z-index: 2000;
+        #search-box {
+            float: right;
+            margin: 7px 10px 0 0;
         }
-        #player-layer iframe { width: 100%; height: 100%; border: none; }
+
+        #search-input {
+            width: 140px;
+            height: 28px;
+            border: none;
+            border-radius: 2px;
+            padding: 0 8px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+            -webkit-appearance: none; /* iOSの角丸を殺す */
+        }
+
+        /* 動画リスト (カード型) */
+        #main-content {
+            margin-top: 54px;
+            padding: 0 8px;
+        }
+
+        .video-card {
+            background: white;
+            margin-bottom: 12px;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .thumb-wrap {
+            width: 100%;
+            height: 170px;
+            background: #000;
+            position: relative;
+        }
+
+        .thumb-wrap img { width: 100%; height: 100%; border: none; }
+
+        .video-details {
+            padding: 10px;
+            position: relative;
+        }
+
+        .video-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #222;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .video-meta {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* プレイヤー (iOS 7はインライン再生が弱いため、全画面風に) */
+        #player-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: black;
+            z-index: 200;
+        }
+
+        #close-btn {
+            position: absolute;
+            top: 10px; right: 10px;
+            color: white; font-size: 24px;
+            z-index: 300;
+            background: rgba(0,0,0,0.5);
+            width: 40px; height: 40px;
+            text-align: center; line-height: 40px;
+            border-radius: 20px;
+        }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <div id="header-logo"><img src="https://www.youtube.com/img/desktop/yt_1200.png"></div>
-    <div id="search-bar">
-        <input type="text" id="search-input" placeholder="検索...">
+    <div id="logo">YouTube</div>
+    <div id="search-box">
+        <input type="text" id="search-input" placeholder="検索">
     </div>
 </div>
 
-<div id="player-layer"></div>
+<div id="player-overlay">
+    <div id="close-btn">×</div>
+    <div id="video-frame-container" style="width:100%; height:240px; margin-top:100px;"></div>
+</div>
 
-<div id="content">
+<div id="main-content">
     <div id="video-list"></div>
 </div>
 
 <script>
-    // --- JavaScript: iOS 6/7 (ES5) 対応版 ---
-    var videoListDir = document.getElementById('video-list');
-    var playerLayer = document.getElementById('player-layer');
-    var searchInput = document.getElementById('search-input');
+    /* --- iOS 6/7 互換 JavaScript (ES3/ES5) --- */
+    var API_KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI'; // あなたのキー
+    var videoList = document.getElementById('video-list');
+    var overlay = document.getElementById('player-overlay');
+    var frameContainer = document.getElementById('video-frame-container');
 
-    // 動画リストを描画する関数
-    function renderVideos(videos) {
-        videoListDir.innerHTML = ''; // リセット
-        for (var i = 0; i < videos.length; i++) {
-            var video = videos[i];
-            var item = document.createElement('div');
-            item.className = 'video-item';
-            
-            // レガシーCSSに合わせたHTML構造を生成
-            item.innerHTML = 
-                '<div class="thumb-box">' +
-                    '<img src="' + video.snippet.thumbnails.medium.url + '">' +
-                '</div>' +
-                '<div class="video-info">' +
-                    '<span class="v-title">' + video.snippet.title + '</span>' +
-                    '<div class="v-meta">' +
-                        '<span>' + video.snippet.channelTitle + '</span>' +
-                    '</div>' +
-                '</div>';
-            
-            // クリックイベント (クロージャ対策で関数を分離)
-            (function(id) {
-                item.onclick = function() {
-                    playVideo(id);
-                };
-            })(video.id.videoId || video.id);
-
-            videoListDir.appendChild(item);
-        }
-    }
-
-    // 再生関数
-    function playVideo(id) {
-        playerLayer.style.display = 'block';
-        playerLayer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1" allowfullscreen></iframe>';
-        window.scrollTo(0, 0); // プレイヤーが見えるように上へ移動
-    }
-
-    // API呼び出し (例: 起動時に人気動画を取得)
-    // ※ ここにあなたのAPIキーを反映させてください
-    var API_KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI'; 
-
-    function fetchVideos(query) {
-        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=' + encodeURIComponent(query) + '&type=video&key=' + API_KEY;
+    function createCard(video) {
+        var card = document.createElement('div');
+        card.className = 'video-card';
         
+        var snippet = video.snippet;
+        var videoId = video.id.videoId || video.id;
+
+        card.innerHTML = 
+            '<div class="thumb-wrap">' +
+                '<img src="' + snippet.thumbnails.high.url + '">' +
+            '</div>' +
+            '<div class="video-details">' +
+                '<span class="video-title">' + snippet.title + '</span>' +
+                '<div class="video-meta">' +
+                    '<span>' + snippet.channelTitle + '</span>' +
+                '</div>' +
+            '</div>';
+
+        card.onclick = function() {
+            openPlayer(videoId);
+        };
+        return card;
+    }
+
+    function openPlayer(id) {
+        overlay.style.display = 'block';
+        frameContainer.innerHTML = '<iframe width="100%" height="100%" src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0" frameborder="0" allowfullscreen></iframe>';
+    }
+
+    document.getElementById('close-btn').onclick = function() {
+        overlay.style.display = 'none';
+        frameContainer.innerHTML = '';
+    };
+
+    function search(q) {
+        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=' + encodeURIComponent(q) + '&type=video&key=' + API_KEY;
+        
+        // 古典的なXMLHttpRequest
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-                renderVideos(data.items);
+                var res = JSON.parse(xhr.responseText);
+                videoList.innerHTML = '';
+                for(var i=0; i<res.items.length; i++) {
+                    videoList.appendChild(createCard(res.items[i]));
+                }
             }
         };
         xhr.send();
     }
 
-    // 検索入力のイベント
-    searchInput.onkeypress = function(e) {
-        if (e.keyCode === 13) { // Enterキー
-            fetchVideos(this.value);
+    document.getElementById('search-input').onkeypress = function(e) {
+        if((e.keyCode || e.which) === 13) {
+            search(this.value);
         }
     };
 
-    // 初期読み込み
+    // 初期ロード
     window.onload = function() {
-        fetchVideos('人気');
+        search('人気');
     };
 </script>
 
