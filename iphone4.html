@@ -9,54 +9,54 @@
     <title>YouTube '17 iOS v14</title>
     <style>
         body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; }
-        header { background-color: #fff; height: 50px; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #e2e2e2; display: flex; align-items: center; padding: 0 15px; box-sizing: border-box; justify-content: space-between; }
+        header { background-color: #fff; height: 50px; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #e2e2e2; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; padding: 0 15px; box-sizing: border-box; -webkit-justify-content: space-between; justify-content: space-between; }
         .h-icon { color: #888; font-size: 24px !important; cursor: pointer; }
 
         .scroll-container { position: absolute; top: 50px; bottom: 49px; width: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
         
         /* ビデオカード */
         .v-card { background: #fff; border-bottom: 1px solid #e2e2e2; cursor: pointer; }
-        .thumb-wrapper { position: relative; width: 100%; background: #000; aspect-ratio: 16 / 9; overflow: hidden; }
-        .v-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb-wrapper { position: relative; width: 100%; background: #000; overflow: hidden; padding-top: 56.25%; /* aspect-ratio: 16/9 の代替 */ }
+        .thumb-wrapper img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
         .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; padding: 2px 4px; font-size: 11px; border-radius: 2px; }
         
         /* タイトルの省略処理 */
         .v-title { font-size: 14px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
 
-        .v-meta { padding: 12px; display: flex; gap: 12px; }
-        .ch-icon { width: 36px; height: 36px; border-radius: 50%; background: #eee; flex-shrink: 0; object-fit: cover; }
-        .v-info { flex: 1; overflow: hidden; }
+        .v-meta { padding: 12px; display: -webkit-flex; display: flex; gap: 12px; }
+        .ch-icon { width: 36px; height: 36px; border-radius: 50%; background: #eee; -webkit-flex-shrink: 0; flex-shrink: 0; object-fit: cover; }
+        .v-info { -webkit-flex: 1; flex: 1; overflow: hidden; }
         .v-stats-line { font-size: 12px; color: #606060; margin-top: 4px; }
 
         /* ミニプレイヤー */
-        #mini-player { display: none; position: fixed; bottom: 58px; right: 8px; width: 160px; height: 90px; background: #000; z-index: 3000; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; }
+        #mini-player { display: none; position: fixed; bottom: 58px; right: 8px; width: 160px; height: 90px; background: #000; z-index: 3000; border-radius: 4px; overflow: hidden; -webkit-box-shadow: 0 4px 12px rgba(0,0,0,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; }
 
         /* 全画面ビュー */
         .full-view { display: none; position: fixed; top: 0; left: 0; width: 100%; bottom: 49px; background: #fff; z-index: 2000; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
-        .player-box { width: 100%; padding-top: 56.25%; background: #000; position: sticky; top: 0; z-index: 2100; }
+        .player-box { width: 100%; padding-top: 56.25%; background: #000; position: -webkit-sticky; position: sticky; top: 0; z-index: 2100; }
         
         /* アクションボタン */
-        .action-bar { display: flex; border-bottom: 1px solid #eee; padding: 12px 0; }
-        .action-btn { flex: 1; text-align: center; color: #606060; font-size: 10px; cursor: pointer; }
+        .action-bar { display: -webkit-flex; display: flex; border-bottom: 1px solid #eee; padding: 12px 0; }
+        .action-btn { -webkit-flex: 1; flex: 1; text-align: center; color: #606060; font-size: 10px; cursor: pointer; }
         .action-btn i { display: block; font-size: 22px; margin-bottom: 2px; color: #888; }
 
         /* コメント */
-        .comment-row { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 12px; }
-        .comm-actions { display: flex; gap: 15px; margin-top: 8px; color: #888; font-size: 12px; align-items: center; }
+        .comment-row { padding: 15px; border-bottom: 1px solid #eee; display: -webkit-flex; display: flex; gap: 12px; }
+        .comm-actions { display: -webkit-flex; display: flex; gap: 15px; margin-top: 8px; color: #888; font-size: 12px; -webkit-align-items: center; align-items: center; }
         .comm-actions i { font-size: 16px !important; }
 
         /* 次の動画（横並び） */
-        .related-item { display: flex; gap: 10px; margin-bottom: 12px; cursor: pointer; }
-        .related-thumb { width: 120px; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
-        .related-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .related-info { flex: 1; overflow: hidden; }
+        .related-item { display: -webkit-flex; display: flex; gap: 10px; margin-bottom: 12px; cursor: pointer; }
+        .related-thumb { width: 120px; position: relative; padding-top: 67.5px; /* 120px * 9/16 */ background: #000; border-radius: 4px; overflow: hidden; -webkit-flex-shrink: 0; flex-shrink: 0; }
+        .related-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .related-info { -webkit-flex: 1; flex: 1; overflow: hidden; }
         .related-title { font-size: 13px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
 
-        nav { background: #fff; height: 49px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #e2e2e2; display: flex; z-index: 4000; }
-        .nav-item { flex: 1; text-align: center; padding-top: 6px; color: #757575; font-size: 10px; }
+        nav { background: #fff; height: 49px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #e2e2e2; display: -webkit-flex; display: flex; z-index: 4000; }
+        .nav-item { -webkit-flex: 1; flex: 1; text-align: center; padding-top: 6px; color: #757575; font-size: 10px; }
         .nav-item i { display: block; font-size: 24px; margin-bottom: 2px; }
 
-        #search-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 50px; background: #fff; z-index: 5000; align-items: center; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid #ddd; }
+        #search-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 50px; background: #fff; z-index: 5000; -webkit-align-items: center; align-items: center; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid #ddd; }
         .sub-btn { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 2px; font-weight: bold; font-size: 13px; cursor: pointer; }
     </style>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -65,7 +65,7 @@
 
 <header>
     <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" style="height:20px;">
-    <div style="display: flex; gap: 18px;">
+    <div style="display: -webkit-flex; display: flex; gap: 18px;">
         <i class="material-icons h-icon" onclick="toggleSearch(true)">search</i>
         <i class="material-icons h-icon">account_circle</i>
     </div>
@@ -73,7 +73,7 @@
 
 <div id="search-overlay">
     <i class="material-icons" onclick="toggleSearch(false)" style="color:#888;">arrow_back</i>
-    <input type="text" id="search-input" style="flex:1; border:none; margin:0 10px; font-size:16px; outline:none;" placeholder="検索" onkeypress="if(event.key==='Enter')executeSearch()">
+    <input type="text" id="search-input" style="-webkit-flex:1; flex:1; border:none; margin:0 10px; font-size:16px; outline:none;" placeholder="検索" onkeypress="if(event.key==='Enter')executeSearch()">
 </div>
 
 <div class="scroll-container"><div id="main-grid"></div></div>
@@ -90,7 +90,7 @@
 <div id="watch-view" class="full-view">
     <div class="player-box">
         <div id="player-container" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-        <div style="position:absolute; top:8px; left:8px; right:8px; display:flex; justify-content:space-between; pointer-events:none;">
+        <div style="position:absolute; top:8px; left:8px; right:8px; display:-webkit-flex; display:flex; -webkit-justify-content:space-between; justify-content:space-between; pointer-events:none;">
             <i class="material-icons" style="color:#fff; text-shadow:0 0 4px #000; pointer-events:auto;" onclick="minimize()">expand_more</i>
             <i class="material-icons" style="color:#fff; text-shadow:0 0 4px #000; pointer-events:auto;" onclick="closeWatch()">close</i>
         </div>
@@ -106,9 +106,9 @@
             <div class="action-btn"><i class="material-icons">reply</i>共有</div>
             <div class="action-btn"><i class="material-icons">playlist_add</i>追加</div>
         </div>
-        <div id="w-ch-row" style="padding:12px 15px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px; cursor:pointer;">
+        <div id="w-ch-row" style="padding:12px 15px; border-bottom:1px solid #eee; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:12px; cursor:pointer;">
             <img id="w-ch-img" class="ch-icon">
-            <div style="flex:1;"><div id="w-ch-name" style="font-size:14px; font-weight:500;"></div><div id="w-ch-subs" style="font-size:12px; color:#606060;"></div></div>
+            <div style="-webkit-flex:1; flex:1;"><div id="w-ch-name" style="font-size:14px; font-weight:500;"></div><div id="w-ch-subs" style="font-size:12px; color:#606060;"></div></div>
             <button class="sub-btn">登録</button>
         </div>
         
@@ -123,147 +123,191 @@
 </div>
 
 <div id="ch-view" class="full-view">
-    <div style="position:sticky; top:0; background:#fff; z-index:2200; height:44px; display:flex; align-items:center; padding:0 15px; border-bottom:1px solid #eee;">
+    <div style="position:-webkit-sticky; position:sticky; top:0; background:#fff; z-index:2200; height:44px; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:0 15px; border-bottom:1px solid #eee;">
         <i class="material-icons h-icon" onclick="document.getElementById('ch-view').style.display='none'">arrow_back</i>
         <span id="ch-top-title" style="margin-left:20px; font-weight:500;"></span>
     </div>
     <div id="ch-banner" style="width:100%; height:100px; background:#ccc; background-size:cover; background-position:center;"></div>
-    <div style="padding:15px; display:flex; align-items:center; gap:15px; border-bottom:1px solid #eee;">
+    <div style="padding:15px; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:15px; border-bottom:1px solid #eee;">
         <img id="ch-large-icon" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
-        <div style="flex:1;"><div id="ch-main-name" style="font-size:18px; font-weight:500;"></div><div id="ch-main-subs" style="font-size:13px; color:#606060;"></div></div>
+        <div style="-webkit-flex:1; flex:1;"><div id="ch-main-name" style="font-size:18px; font-weight:500;"></div><div id="ch-main-subs" style="font-size:13px; color:#606060;"></div></div>
         <button class="sub-btn">登録</button>
     </div>
     <div id="ch-videos-list"></div>
 </div>
 
 <script>
-    const API_KEY = 'AIzaSyAjKk_B19vhdtdjMxMABWK1DO9maUHcxbw';
-    let currentId = '';
+    var API_KEY = 'AIzaSyAjKk_B19vhdtdjMxMABWK1DO9maUHcxbw';
+    var currentId = '';
 
-    window.onload = () => loadHome();
-
-    function toggleSearch(s) { document.getElementById('search-overlay').style.display = s ? 'flex' : 'none'; }
-
-    async function loadHome() {
-        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=10&key=${API_KEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        renderGrid(data.items, 'main-grid');
+    // async/await + fetch の代わりに XMLHttpRequest を使ったPromiseラッパー
+    function xhrGet(url) {
+        return new Promise(function(resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            resolve(JSON.parse(xhr.responseText));
+                        } catch(e) {
+                            reject(e);
+                        }
+                    } else {
+                        reject(new Error('HTTP ' + xhr.status));
+                    }
+                }
+            };
+            xhr.send();
+        });
     }
 
-    async function executeSearch() {
-        const q = document.getElementById('search-input').value;
-        if(!q) return;
+    window.onload = function() { loadHome(); };
+
+    function toggleSearch(s) {
+        document.getElementById('search-overlay').style.display = s ? '-webkit-flex' : 'none';
+        if (s) document.getElementById('search-overlay').style.display = 'flex';
+    }
+
+    function loadHome() {
+        var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=10&key=' + API_KEY;
+        xhrGet(url).then(function(data) {
+            renderGrid(data.items, 'main-grid');
+        });
+    }
+
+    function executeSearch() {
+        var q = document.getElementById('search-input').value;
+        if (!q) return;
         toggleSearch(false);
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(q)}&key=${API_KEY}`);
-        const data = await res.json();
-        const ids = data.items.map(i => i.id.videoId).join(',');
-        const detailRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${ids}&key=${API_KEY}`);
-        const detailData = await detailRes.json();
-        renderGrid(detailData.items, 'main-grid');
+        xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=' + encodeURIComponent(q) + '&key=' + API_KEY)
+        .then(function(data) {
+            var ids = data.items.map(function(i) { return i.id.videoId; }).join(',');
+            return xhrGet('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=' + ids + '&key=' + API_KEY);
+        })
+        .then(function(detailData) {
+            renderGrid(detailData.items, 'main-grid');
+        });
     }
 
     function renderGrid(items, targetId) {
-        const grid = document.getElementById(targetId); grid.innerHTML = '';
-        items.forEach(item => {
-            const snip = item.snippet;
-            const vid = item.id.videoId || item.id;
-            const duration = item.contentDetails ? formatDuration(item.contentDetails.duration) : "10:00";
-            const timeAgo = formatTimeAgo(snip.publishedAt);
-            const views = item.statistics ? formatViews(item.statistics.viewCount) : "";
-            const div = document.createElement('div'); div.className = 'v-card';
-            div.onclick = () => openWatch(vid, snip, item.statistics);
-            div.innerHTML = `<div class="thumb-wrapper"><img src="${snip.thumbnails.medium.url}"><div class="v-duration">${duration}</div></div><div class="v-meta"><div class="ch-icon"></div><div class="v-info"><div class="v-title">${snip.title}</div><div class="v-stats-line">${snip.channelTitle} ・ ${views} ・ ${timeAgo}</div></div></div>`;
+        var grid = document.getElementById(targetId);
+        grid.innerHTML = '';
+        items.forEach(function(item) {
+            var snip = item.snippet;
+            var vid = item.id.videoId || item.id;
+            var duration = item.contentDetails ? formatDuration(item.contentDetails.duration) : '10:00';
+            var timeAgo = formatTimeAgo(snip.publishedAt);
+            var views = item.statistics ? formatViews(item.statistics.viewCount) : '';
+            var div = document.createElement('div');
+            div.className = 'v-card';
+            // closureのためにitemをコピー
+            (function(v, s, st) {
+                div.onclick = function() { openWatch(v, s, st); };
+            })(vid, snip, item.statistics);
+            div.innerHTML = '<div class="thumb-wrapper"><img src="' + snip.thumbnails.medium.url + '"><div class="v-duration">' + duration + '</div></div><div class="v-meta"><div class="ch-icon"></div><div class="v-info"><div class="v-title">' + snip.title + '</div><div class="v-stats-line">' + snip.channelTitle + ' ・ ' + views + ' ・ ' + timeAgo + '</div></div></div>';
             grid.appendChild(div);
         });
     }
 
-    async function openWatch(id, snip, stats) {
-        currentId = id; closeMini();
+    function openWatch(id, snip, stats) {
+        currentId = id;
+        closeMini();
         document.getElementById('watch-view').style.display = 'block';
-        document.getElementById('player-container').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+        document.getElementById('player-container').innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>';
         document.getElementById('w-title').innerText = snip.title;
-        document.getElementById('w-likes').innerText = formatLikes(stats?.likeCount);
-        document.getElementById('w-stats').innerText = `${parseInt(stats?.viewCount || 0).toLocaleString()} 回視聴 ・ ${formatTimeAgo(snip.publishedAt)}`;
+        document.getElementById('w-likes').innerText = formatLikes(stats ? stats.likeCount : null);
+        document.getElementById('w-stats').innerText = parseInt(stats ? stats.viewCount || 0 : 0).toLocaleString() + ' 回視聴 ・ ' + formatTimeAgo(snip.publishedAt);
 
-        // 1. チャンネル情報 & チャンネルページ遷移
-        const cRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${snip.channelId}&key=${API_KEY}`);
-        const cData = await cRes.json();
-        const chan = cData.items[0];
-        document.getElementById('w-ch-img').src = chan.snippet.thumbnails.default.url;
-        document.getElementById('w-ch-name').innerText = chan.snippet.title;
-        document.getElementById('w-ch-subs').innerText = `登録者数 ${parseInt(chan.statistics.subscriberCount).toLocaleString()}人`;
-        document.getElementById('w-ch-row').onclick = () => openChannel(chan);
+        // 1. チャンネル情報
+        xhrGet('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=' + snip.channelId + '&key=' + API_KEY)
+        .then(function(cData) {
+            var chan = cData.items[0];
+            document.getElementById('w-ch-img').src = chan.snippet.thumbnails.default.url;
+            document.getElementById('w-ch-name').innerText = chan.snippet.title;
+            document.getElementById('w-ch-subs').innerText = '登録者数 ' + parseInt(chan.statistics.subscriberCount).toLocaleString() + '人';
+            document.getElementById('w-ch-row').onclick = function() { openChannel(chan); };
+        });
 
         // 2. コメント
-        const mRes = await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${id}&maxResults=5&key=${API_KEY}`);
-        const mData = await mRes.json();
-        const mL = document.getElementById('w-comments-list'); mL.innerHTML = '';
-        if(mData.items) mData.items.forEach(t => {
-            const s = t.snippet.topLevelComment.snippet;
-            mL.innerHTML += `<div class="comment-row"><img src="${s.authorProfileImageUrl}" style="width:32px; height:32px; border-radius:50%;"><div style="flex:1; font-size:13px;"><strong>${s.authorDisplayName}</strong> ・ ${formatTimeAgo(s.publishedAt)}<br>${s.textDisplay}<div class="comm-actions"><i class="material-icons">thumb_up</i><span>${s.likeCount}</span><i class="material-icons">thumb_down</i><span>返信</span></div></div></div>`;
+        xhrGet('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=' + id + '&maxResults=5&key=' + API_KEY)
+        .then(function(mData) {
+            var mL = document.getElementById('w-comments-list');
+            mL.innerHTML = '';
+            if (mData.items) {
+                mData.items.forEach(function(t) {
+                    var s = t.snippet.topLevelComment.snippet;
+                    mL.innerHTML += '<div class="comment-row"><img src="' + s.authorProfileImageUrl + '" style="width:32px; height:32px; border-radius:50%;"><div style="flex:1; font-size:13px;"><strong>' + s.authorDisplayName + '</strong> ・ ' + formatTimeAgo(s.publishedAt) + '<br>' + s.textDisplay + '<div class="comm-actions"><i class="material-icons">thumb_up</i><span>' + s.likeCount + '</span><i class="material-icons">thumb_down</i><span>返信</span></div></div></div>';
+                });
+            }
         });
 
         // 3. 次の動画
-        const rRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${encodeURIComponent(snip.title)}&key=${API_KEY}`);
-        const rData = await rRes.json();
-        const rL = document.getElementById('w-related-list'); rL.innerHTML = '';
-        rData.items.forEach(v => {
-            if(v.id.videoId === id) return;
-            rL.innerHTML += `<div class="related-item" onclick="event.stopPropagation(); openWatch('${v.id.videoId}', ${JSON.stringify(v.snippet).replace(/"/g, '&quot;')}, {viewCount:'123456'})">
-                <div class="related-thumb"><img src="${v.snippet.thumbnails.medium.url}"></div>
-                <div class="related-info"><div class="related-title">${v.snippet.title}</div><div style="font-size:11px; color:#606060; margin-top:4px;">${v.snippet.channelTitle}</div></div>
-            </div>`;
+        xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=' + encodeURIComponent(snip.title) + '&key=' + API_KEY)
+        .then(function(rData) {
+            var rL = document.getElementById('w-related-list');
+            rL.innerHTML = '';
+            rData.items.forEach(function(v) {
+                if (v.id.videoId === id) return;
+                var snipStr = JSON.stringify(v.snippet).replace(/"/g, '&quot;');
+                rL.innerHTML += '<div class="related-item" onclick="event.stopPropagation(); openWatch(\'' + v.id.videoId + '\', ' + snipStr + ', {viewCount:\'123456\'})">' +
+                    '<div class="related-thumb"><img src="' + v.snippet.thumbnails.medium.url + '"></div>' +
+                    '<div class="related-info"><div class="related-title">' + v.snippet.title + '</div><div style="font-size:11px; color:#606060; margin-top:4px;">' + v.snippet.channelTitle + '</div></div>' +
+                    '</div>';
+            });
         });
     }
 
-    async function openChannel(chan) {
+    function openChannel(chan) {
         document.getElementById('ch-view').style.display = 'block';
         document.getElementById('ch-top-title').innerText = chan.snippet.title;
         document.getElementById('ch-main-name').innerText = chan.snippet.title;
         document.getElementById('ch-large-icon').src = chan.snippet.thumbnails.medium.url;
-        document.getElementById('ch-main-subs').innerText = `登録者数 ${parseInt(chan.statistics.subscriberCount).toLocaleString()}人`;
-        const banner = chan.brandingSettings?.image?.bannerExternalUrl || '';
-        document.getElementById('ch-banner').style.backgroundImage = `url('${banner}')`;
-        const vRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chan.id}&maxResults=10&order=date&type=video&key=${API_KEY}`);
-        const vData = await vRes.json();
-        renderGrid(vData.items, 'ch-videos-list');
+        document.getElementById('ch-main-subs').innerText = '登録者数 ' + parseInt(chan.statistics.subscriberCount).toLocaleString() + '人';
+        var banner = (chan.brandingSettings && chan.brandingSettings.image) ? chan.brandingSettings.image.bannerExternalUrl || '' : '';
+        document.getElementById('ch-banner').style.backgroundImage = "url('" + banner + "')";
+        xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + chan.id + '&maxResults=10&order=date&type=video&key=' + API_KEY)
+        .then(function(vData) {
+            renderGrid(vData.items, 'ch-videos-list');
+        });
     }
 
     function formatLikes(num) {
-        if(!num) return "評価";
-        const n = parseInt(num);
-        if(n >= 10000) return (n/10000).toFixed(1) + "万";
+        if (!num) return '評価';
+        var n = parseInt(num);
+        if (n >= 10000) return (n / 10000).toFixed(1) + '万';
         return n.toLocaleString();
     }
 
     function formatTimeAgo(dateStr) {
-        const diff = (new Date() - new Date(dateStr)) / 1000;
-        if (diff < 3600) return "1時間前";
-        if (diff < 86400) return Math.floor(diff/3600) + "時間前";
-        if (diff < 2592000) return Math.floor(diff/86400) + "日前";
-        if (diff < 31104000) return Math.floor(diff/2592000) + "ヶ月前";
-        return Math.floor(diff/31104000) + "年前";
+        var diff = (new Date() - new Date(dateStr)) / 1000;
+        if (diff < 3600) return '1時間前';
+        if (diff < 86400) return Math.floor(diff / 3600) + '時間前';
+        if (diff < 2592000) return Math.floor(diff / 86400) + '日前';
+        if (diff < 31104000) return Math.floor(diff / 2592000) + 'ヶ月前';
+        return Math.floor(diff / 31104000) + '年前';
     }
 
     function formatDuration(pt) {
-        const m = pt.match(/\d+/g);
-        if(!m) return "10:00";
-        if(m.length === 1) return `0:${m[0].padStart(2, '0')}`;
-        return m.slice(0,2).map((x,i) => i === 0 ? x : x.padStart(2, '0')).join(':');
+        var m = pt.match(/\d+/g);
+        if (!m) return '10:00';
+        if (m.length === 1) return '0:' + (m[0].length < 2 ? '0' + m[0] : m[0]);
+        return m[0] + ':' + (m[1].length < 2 ? '0' + m[1] : m[1]);
     }
 
-    function formatViews(n) { return parseInt(n) > 10000 ? (parseInt(n)/10000).toFixed(1) + "万回" : parseInt(n).toLocaleString() + "回"; }
-    
-    // ミニプレイヤー制御
-    function minimize() { 
-        document.getElementById('watch-view').style.display='none'; 
-        document.getElementById('mini-player').style.display='block'; 
-        document.getElementById('mini-video-wrap').innerHTML = `<iframe src="https://www.youtube.com/embed/${currentId}?autoplay=1&mute=1" style="width:100%; height:100%; border:none;"></iframe>`; 
+    function formatViews(n) {
+        return parseInt(n) > 10000 ? (parseInt(n) / 10000).toFixed(1) + '万回' : parseInt(n).toLocaleString() + '回';
     }
-    function restoreMini() { document.getElementById('watch-view').style.display='block'; closeMini(); }
-    function closeMini() { document.getElementById('mini-player').style.display='none'; document.getElementById('mini-video-wrap').innerHTML = ''; }
-    function closeWatch() { document.getElementById('watch-view').style.display='none'; document.getElementById('player-container').innerHTML=''; closeMini(); }
+
+    // ミニプレイヤー制御
+    function minimize() {
+        document.getElementById('watch-view').style.display = 'none';
+        document.getElementById('mini-player').style.display = 'block';
+        document.getElementById('mini-video-wrap').innerHTML = '<iframe src="https://www.youtube.com/embed/' + currentId + '?autoplay=1&mute=1" style="width:100%; height:100%; border:none;"></iframe>';
+    }
+    function restoreMini() { document.getElementById('watch-view').style.display = 'block'; closeMini(); }
+    function closeMini() { document.getElementById('mini-player').style.display = 'none'; document.getElementById('mini-video-wrap').innerHTML = ''; }
+    function closeWatch() { document.getElementById('watch-view').style.display = 'none'; document.getElementById('player-container').innerHTML = ''; closeMini(); }
 </script>
 </body>
 </html>
