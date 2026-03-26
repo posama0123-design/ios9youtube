@@ -1,275 +1,269 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+   <meta name="apple-mobile-web-app-title" content="YouTube">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="YouTube">
-    
-    <title>YouTube Legacy (iOS9 UI)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YouTube '17 iOS v14</title>
     <style>
-        /* --- 基礎スタイル (iOS 6/7向けリセット) --- */
-        body, html {
-            margin: 0; padding: 0;
-            height: 100%; width: 100%;
-            background-color: #f1f1f1;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            overflow-x: hidden; /* 横スクロール防止 */
-            -webkit-text-size-adjust: none; /* 文字サイズ勝手調整防止 */
-        }
+        body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; }
+        header { background-color: #fff; height: 50px; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #e2e2e2; display: flex; align-items: center; padding: 0 15px; box-sizing: border-box; justify-content: space-between; }
+        .h-icon { color: #888; font-size: 24px !important; cursor: pointer; }
 
-        /* --- ヘッダー (Flexbox廃止 -> Legacy Float/Inline-block) --- */
-        #header {
-            background-color: #e62117; /* iOS 9風の赤 */
-            height: 44px; /* iOSレガシー標準 */
-            width: 100%;
-            position: fixed; top: 0; left: 0;
-            z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            border-bottom: 1px solid #c41e16;
-        }
+        .scroll-container { position: absolute; top: 50px; bottom: 49px; width: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+        
+        /* ビデオカード */
+        .v-card { background: #fff; border-bottom: 1px solid #e2e2e2; cursor: pointer; }
+        .thumb-wrapper { position: relative; width: 100%; background: #000; aspect-ratio: 16 / 9; overflow: hidden; }
+        .v-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; padding: 2px 4px; font-size: 11px; border-radius: 2px; }
+        
+        /* タイトルの省略処理 */
+        .v-title { font-size: 14px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
 
-        /* ロゴと検索バーを横並びにする (Legacy法) */
-        #header-logo {
-            float: left; /* 左に寄せる */
-            margin-left: 8px;
-            margin-top: 10px;
-        }
+        .v-meta { padding: 12px; display: flex; gap: 12px; }
+        .ch-icon { width: 36px; height: 36px; border-radius: 50%; background: #eee; flex-shrink: 0; object-fit: cover; }
+        .v-info { flex: 1; overflow: hidden; }
+        .v-stats-line { font-size: 12px; color: #606060; margin-top: 4px; }
 
-        #header-logo img {
-            height: 24px; /* ロゴサイズ調整 */
-            width: auto;
-        }
+        /* ミニプレイヤー */
+        #mini-player { display: none; position: fixed; bottom: 58px; right: 8px; width: 160px; height: 90px; background: #000; z-index: 3000; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; }
 
-        #search-bar {
-            float: right; /* 右に寄せる */
-            margin-right: 10px;
-            margin-top: 8px;
-            width: 160px; /* iPhone 4幅に合わせた固定値 */
-        }
+        /* 全画面ビュー */
+        .full-view { display: none; position: fixed; top: 0; left: 0; width: 100%; bottom: 49px; background: #fff; z-index: 2000; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+        .player-box { width: 100%; padding-top: 56.25%; background: #000; position: sticky; top: 0; z-index: 2100; }
+        
+        /* アクションボタン */
+        .action-bar { display: flex; border-bottom: 1px solid #eee; padding: 12px 0; }
+        .action-btn { flex: 1; text-align: center; color: #606060; font-size: 10px; cursor: pointer; }
+        .action-btn i { display: block; font-size: 22px; margin-bottom: 2px; color: #888; }
 
-        #search-input {
-            width: 100%;
-            height: 26px;
-            padding: 0 5px;
-            border: none;
-            border-radius: 2px;
-            font-size: 14px;
-            background: rgba(255,255,255,0.9);
-            /* iOS特有の内側影を消す */
-            -webkit-appearance: none;
-        }
+        /* コメント */
+        .comment-row { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 12px; }
+        .comm-actions { display: flex; gap: 15px; margin-top: 8px; color: #888; font-size: 12px; align-items: center; }
+        .comm-actions i { font-size: 16px !important; }
 
-        /* --- メインコンテンツエリア --- */
-        #content {
-            margin-top: 54px; /* ヘッダーの分だけ下げる */
-            padding: 0 5px;
-            width: 310px; /* 余白を引いた幅 */
-        }
+        /* 次の動画（横並び） */
+        .related-item { display: flex; gap: 10px; margin-bottom: 12px; cursor: pointer; }
+        .related-thumb { width: 120px; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+        .related-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .related-info { flex: 1; overflow: hidden; }
+        .related-title { font-size: 13px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
 
-        /* --- 動画リスト (Flexbox廃止 -> Legacy Float Layout) --- */
-        #video-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-        }
+        nav { background: #fff; height: 49px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #e2e2e2; display: flex; z-index: 4000; }
+        .nav-item { flex: 1; text-align: center; padding-top: 6px; color: #757575; font-size: 10px; }
+        .nav-item i { display: block; font-size: 24px; margin-bottom: 2px; }
 
-        .video-item {
-            background-color: white;
-            margin-bottom: 8px;
-            padding: 5px;
-            border-bottom: 1px solid #e0e0e0;
-            /* float解除用の記述 */
-            overflow: hidden; 
-        }
-
-        /* サムネイルとテキストを横並びにする (Float法) */
-        .thumbnail-container {
-            float: left;
-            width: 120px; /* iPhone 4向けの固定幅 */
-            height: 90px;
-            position: relative;
-            background-color: #000; /* ローディング中の背景 */
-        }
-
-        .thumbnail-container img {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* 再生時間 (position: absolute) */
-        .video-duration {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            background-color: rgba(0,0,0,0.8);
-            color: white;
-            padding: 1px 3px;
-            font-size: 11px;
-            border-radius: 2px;
-        }
-
-        /* テキストエリア (Float解除後の隣) */
-        .video-info {
-            margin-left: 130px; /* サムネイル幅 + 余白 */
-            padding-right: 5px;
-        }
-
-        .video-title {
-            font-size: 13px;
-            font-weight: bold;
-            color: #333;
-            margin: 0 0 4px 0;
-            line-height: 1.3;
-            /* 2行で省略する設定 (iOS Safari対応) */
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .video-meta {
-            font-size: 11px;
-            color: #777;
-            line-height: 1.2;
-        }
-
-        .channel-name {
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        /* --- 再生プレイヤーエリア (Legacy absolute) --- */
-        #player-container {
-            display: none; /* 最初は隠す (JSで制御) */
-            position: fixed;
-            top: 44px; /* ヘッダーの下 */
-            left: 0;
-            width: 100%;
-            height: 180px; /* iPhone 4向けのプレイヤー高さ */
-            background-color: black;
-            z-index: 900;
-        }
-
-        #player-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* プレイヤー表示時のコンテンツ位置調整用のクラス */
-        .player-active #content {
-            margin-top: 230px; /* ヘッダー + プレイヤー */
-        }
-
+        #search-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 50px; background: #fff; z-index: 5000; align-items: center; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid #ddd; }
+        .sub-btn { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 2px; font-weight: bold; font-size: 13px; cursor: pointer; }
     </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-    <div id="header">
-        <div id="header-logo">
-            <div style="color:white; font-weight:bold; font-size:18px;">YouTube</div>
-        </div>
-        <div id="search-bar">
-            <input type="text" id="search-input" placeholder="検索">
+
+<header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" style="height:20px;">
+    <div style="display: flex; gap: 18px;">
+        <i class="material-icons h-icon" onclick="toggleSearch(true)">search</i>
+        <i class="material-icons h-icon">account_circle</i>
+    </div>
+</header>
+
+<div id="search-overlay">
+    <i class="material-icons" onclick="toggleSearch(false)" style="color:#888;">arrow_back</i>
+    <input type="text" id="search-input" style="flex:1; border:none; margin:0 10px; font-size:16px; outline:none;" placeholder="検索" onkeypress="if(event.key==='Enter')executeSearch()">
+</div>
+
+<div class="scroll-container"><div id="main-grid"></div></div>
+
+<div id="mini-player" onclick="restoreMini()"><div id="mini-video-wrap" style="width:100%; height:100%;"></div></div>
+
+<nav>
+    <div class="nav-item" onclick="location.reload()"><i class="material-icons">home</i>ホーム</div>
+    <div class="nav-item"><i class="material-icons">whatshot</i>急上昇</div>
+    <div class="nav-item"><i class="material-icons">subscriptions</i>登録済み</div>
+    <div class="nav-item"><i class="material-icons">video_library</i>ライブラリ</div>
+</nav>
+
+<div id="watch-view" class="full-view">
+    <div class="player-box">
+        <div id="player-container" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+        <div style="position:absolute; top:8px; left:8px; right:8px; display:flex; justify-content:space-between; pointer-events:none;">
+            <i class="material-icons" style="color:#fff; text-shadow:0 0 4px #000; pointer-events:auto;" onclick="minimize()">expand_more</i>
+            <i class="material-icons" style="color:#fff; text-shadow:0 0 4px #000; pointer-events:auto;" onclick="closeWatch()">close</i>
         </div>
     </div>
+    <div id="watch-details">
+        <div style="padding:15px; border-bottom:1px solid #eee;">
+            <div id="w-title" class="v-title"></div>
+            <div id="w-stats" style="font-size:12px; color:#606060; margin-top:5px;"></div>
+        </div>
+        <div class="action-bar">
+            <div class="action-btn"><i class="material-icons">thumb_up</i><span id="w-likes">評価</span></div>
+            <div class="action-btn"><i class="material-icons">thumb_down</i>低評価</div>
+            <div class="action-btn"><i class="material-icons">reply</i>共有</div>
+            <div class="action-btn"><i class="material-icons">playlist_add</i>追加</div>
+        </div>
+        <div id="w-ch-row" style="padding:12px 15px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px; cursor:pointer;">
+            <img id="w-ch-img" class="ch-icon">
+            <div style="flex:1;"><div id="w-ch-name" style="font-size:14px; font-weight:500;"></div><div id="w-ch-subs" style="font-size:12px; color:#606060;"></div></div>
+            <button class="sub-btn">登録</button>
+        </div>
+        
+        <div style="background:#f5f5f5; padding:10px 15px; font-size:14px; border-bottom:1px solid #eee;"><strong>コメント</strong></div>
+        <div id="w-comments-list"></div>
 
-    <div id="player-container"></div>
-
-    <div id="content">
-        <div id="video-list">
-            </div>
+        <div style="padding:15px; background:#fff;">
+            <strong>次の動画</strong>
+            <div id="w-related-list" style="margin-top:10px;"></div>
+        </div>
     </div>
+</div>
 
-    <script>
-        /* --- 【必須】ここにあなたのYouTube APIキーを入力してください --- */
-        var API_KEY = 'AIzaSyBGxeOnslbgSvN2JWq8o2tNptSFzSaY8lI'; 
+<div id="ch-view" class="full-view">
+    <div style="position:sticky; top:0; background:#fff; z-index:2200; height:44px; display:flex; align-items:center; padding:0 15px; border-bottom:1px solid #eee;">
+        <i class="material-icons h-icon" onclick="document.getElementById('ch-view').style.display='none'">arrow_back</i>
+        <span id="ch-top-title" style="margin-left:20px; font-weight:500;"></span>
+    </div>
+    <div id="ch-banner" style="width:100%; height:100px; background:#ccc; background-size:cover; background-position:center;"></div>
+    <div style="padding:15px; display:flex; align-items:center; gap:15px; border-bottom:1px solid #eee;">
+        <img id="ch-large-icon" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
+        <div style="flex:1;"><div id="ch-main-name" style="font-size:18px; font-weight:500;"></div><div id="ch-main-subs" style="font-size:13px; color:#606060;"></div></div>
+        <button class="sub-btn">登録</button>
+    </div>
+    <div id="ch-videos-list"></div>
+</div>
 
-        var videoListDir = document.getElementById('video-list');
-        var playerContainer = document.getElementById('player-container');
-        var searchInput = document.getElementById('search-input');
+<script>
+    const API_KEY = 'AIzaSyAjKk_B19vhdtdjMxMABWK1DO9maUHcxbw';
+    let currentId = '';
 
-        // 動画リストを描画する関数
-        function renderVideos(videos) {
-            videoListDir.innerHTML = ''; // リセット
-            for (var i = 0; i < videos.length; i++) {
-                var video = videos[i];
-                var snippet = video.snippet;
-                var videoId = video.id.videoId || video.id;
+    window.onload = () => loadHome();
 
-                var item = document.createElement('div');
-                item.className = 'video-item';
-                
-                // レガシーCSSに合わせたHTML構造を生成 (iOS 9風の見た目)
-                item.innerHTML = 
-                    '<div class="thumbnail-container">' +
-                        '<img src="' + snippet.thumbnails.medium.url + '" alt="' + snippet.title + '">' +
-                        // 再生時間はAPIから別途取得が必要なため、今回はダミー
-                        '<span class="video-duration">--:--</span>' +
-                    '</div>' +
-                    '<div class="video-info">' +
-                        '<h3 class="video-title">' + snippet.title + '</h3>' +
-                        '<div class="video-meta">' +
-                            '<span class="channel-name">' + snippet.channelTitle + '</span>' +
-                            // 視聴回数もAPIから別途取得が必要なため、今回はダミー
-                            '<span class="view-count">-- 回視聴</span>' +
-                        '</div>' +
-                    '</div>';
-                
-                // クリックイベント (クロージャ対策で関数を分離)
-                (function(id) {
-                    item.onclick = function() {
-                        playVideo(id);
-                    };
-                })(videoId);
+    function toggleSearch(s) { document.getElementById('search-overlay').style.display = s ? 'flex' : 'none'; }
 
-                videoListDir.appendChild(item);
-            }
-        }
+    async function loadHome() {
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=10&key=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        renderGrid(data.items, 'main-grid');
+    }
 
-        // 再生関数
-        function playVideo(id) {
-            playerContainer.style.display = 'block';
-            playerContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0" allowfullscreen></iframe>';
-            
-            // プレイヤー表示時にコンテンツ位置を下げるクラスを付与
-            document.body.className = 'player-active';
-            
-            // プレイヤーが見えるように上へ移動
-            window.scrollTo(0, 0); 
-        }
+    async function executeSearch() {
+        const q = document.getElementById('search-input').value;
+        if(!q) return;
+        toggleSearch(false);
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(q)}&key=${API_KEY}`);
+        const data = await res.json();
+        const ids = data.items.map(i => i.id.videoId).join(',');
+        const detailRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${ids}&key=${API_KEY}`);
+        const detailData = await detailRes.json();
+        renderGrid(detailData.items, 'main-grid');
+    }
 
-        // API呼び出し (例: 検索を実行)
-        function fetchVideos(query) {
-            var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=' + encodeURIComponent(query) + '&type=video&key=' + API_KEY;
-            
-            // 古典的なXMLHttpRequest (fetch廃止)
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    renderVideos(data.items);
-                }
-            };
-            xhr.send();
-        }
+    function renderGrid(items, targetId) {
+        const grid = document.getElementById(targetId); grid.innerHTML = '';
+        items.forEach(item => {
+            const snip = item.snippet;
+            const vid = item.id.videoId || item.id;
+            const duration = item.contentDetails ? formatDuration(item.contentDetails.duration) : "10:00";
+            const timeAgo = formatTimeAgo(snip.publishedAt);
+            const views = item.statistics ? formatViews(item.statistics.viewCount) : "";
+            const div = document.createElement('div'); div.className = 'v-card';
+            div.onclick = () => openWatch(vid, snip, item.statistics);
+            div.innerHTML = `<div class="thumb-wrapper"><img src="${snip.thumbnails.medium.url}"><div class="v-duration">${duration}</div></div><div class="v-meta"><div class="ch-icon"></div><div class="v-info"><div class="v-title">${snip.title}</div><div class="v-stats-line">${snip.channelTitle} ・ ${views} ・ ${timeAgo}</div></div></div>`;
+            grid.appendChild(div);
+        });
+    }
 
-        // 検索入力のイベント
-        searchInput.onkeypress = function(e) {
-            if ((e.keyCode || e.which) === 13) { // Enterキー
-                fetchVideos(this.value);
-            }
-        };
+    async function openWatch(id, snip, stats) {
+        currentId = id; closeMini();
+        document.getElementById('watch-view').style.display = 'block';
+        document.getElementById('player-container').innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+        document.getElementById('w-title').innerText = snip.title;
+        document.getElementById('w-likes').innerText = formatLikes(stats?.likeCount);
+        document.getElementById('w-stats').innerText = `${parseInt(stats?.viewCount || 0).toLocaleString()} 回視聴 ・ ${formatTimeAgo(snip.publishedAt)}`;
 
-        // 初期読み込み (例: '人気'で検索)
-        window.onload = function() {
-            fetchVideos('人気');
-        };
-    </script>
+        // 1. チャンネル情報 & チャンネルページ遷移
+        const cRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${snip.channelId}&key=${API_KEY}`);
+        const cData = await cRes.json();
+        const chan = cData.items[0];
+        document.getElementById('w-ch-img').src = chan.snippet.thumbnails.default.url;
+        document.getElementById('w-ch-name').innerText = chan.snippet.title;
+        document.getElementById('w-ch-subs').innerText = `登録者数 ${parseInt(chan.statistics.subscriberCount).toLocaleString()}人`;
+        document.getElementById('w-ch-row').onclick = () => openChannel(chan);
+
+        // 2. コメント
+        const mRes = await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${id}&maxResults=5&key=${API_KEY}`);
+        const mData = await mRes.json();
+        const mL = document.getElementById('w-comments-list'); mL.innerHTML = '';
+        if(mData.items) mData.items.forEach(t => {
+            const s = t.snippet.topLevelComment.snippet;
+            mL.innerHTML += `<div class="comment-row"><img src="${s.authorProfileImageUrl}" style="width:32px; height:32px; border-radius:50%;"><div style="flex:1; font-size:13px;"><strong>${s.authorDisplayName}</strong> ・ ${formatTimeAgo(s.publishedAt)}<br>${s.textDisplay}<div class="comm-actions"><i class="material-icons">thumb_up</i><span>${s.likeCount}</span><i class="material-icons">thumb_down</i><span>返信</span></div></div></div>`;
+        });
+
+        // 3. 次の動画
+        const rRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${encodeURIComponent(snip.title)}&key=${API_KEY}`);
+        const rData = await rRes.json();
+        const rL = document.getElementById('w-related-list'); rL.innerHTML = '';
+        rData.items.forEach(v => {
+            if(v.id.videoId === id) return;
+            rL.innerHTML += `<div class="related-item" onclick="event.stopPropagation(); openWatch('${v.id.videoId}', ${JSON.stringify(v.snippet).replace(/"/g, '&quot;')}, {viewCount:'123456'})">
+                <div class="related-thumb"><img src="${v.snippet.thumbnails.medium.url}"></div>
+                <div class="related-info"><div class="related-title">${v.snippet.title}</div><div style="font-size:11px; color:#606060; margin-top:4px;">${v.snippet.channelTitle}</div></div>
+            </div>`;
+        });
+    }
+
+    async function openChannel(chan) {
+        document.getElementById('ch-view').style.display = 'block';
+        document.getElementById('ch-top-title').innerText = chan.snippet.title;
+        document.getElementById('ch-main-name').innerText = chan.snippet.title;
+        document.getElementById('ch-large-icon').src = chan.snippet.thumbnails.medium.url;
+        document.getElementById('ch-main-subs').innerText = `登録者数 ${parseInt(chan.statistics.subscriberCount).toLocaleString()}人`;
+        const banner = chan.brandingSettings?.image?.bannerExternalUrl || '';
+        document.getElementById('ch-banner').style.backgroundImage = `url('${banner}')`;
+        const vRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chan.id}&maxResults=10&order=date&type=video&key=${API_KEY}`);
+        const vData = await vRes.json();
+        renderGrid(vData.items, 'ch-videos-list');
+    }
+
+    function formatLikes(num) {
+        if(!num) return "評価";
+        const n = parseInt(num);
+        if(n >= 10000) return (n/10000).toFixed(1) + "万";
+        return n.toLocaleString();
+    }
+
+    function formatTimeAgo(dateStr) {
+        const diff = (new Date() - new Date(dateStr)) / 1000;
+        if (diff < 3600) return "1時間前";
+        if (diff < 86400) return Math.floor(diff/3600) + "時間前";
+        if (diff < 2592000) return Math.floor(diff/86400) + "日前";
+        if (diff < 31104000) return Math.floor(diff/2592000) + "ヶ月前";
+        return Math.floor(diff/31104000) + "年前";
+    }
+
+    function formatDuration(pt) {
+        const m = pt.match(/\d+/g);
+        if(!m) return "10:00";
+        if(m.length === 1) return `0:${m[0].padStart(2, '0')}`;
+        return m.slice(0,2).map((x,i) => i === 0 ? x : x.padStart(2, '0')).join(':');
+    }
+
+    function formatViews(n) { return parseInt(n) > 10000 ? (parseInt(n)/10000).toFixed(1) + "万回" : parseInt(n).toLocaleString() + "回"; }
+    
+    // ミニプレイヤー制御
+    function minimize() { 
+        document.getElementById('watch-view').style.display='none'; 
+        document.getElementById('mini-player').style.display='block'; 
+        document.getElementById('mini-video-wrap').innerHTML = `<iframe src="https://www.youtube.com/embed/${currentId}?autoplay=1&mute=1" style="width:100%; height:100%; border:none;"></iframe>`; 
+    }
+    function restoreMini() { document.getElementById('watch-view').style.display='block'; closeMini(); }
+    function closeMini() { document.getElementById('mini-player').style.display='none'; document.getElementById('mini-video-wrap').innerHTML = ''; }
+    function closeWatch() { document.getElementById('watch-view').style.display='none'; document.getElementById('player-container').innerHTML=''; closeMini(); }
+</script>
 </body>
 </html>
