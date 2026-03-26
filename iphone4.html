@@ -76,7 +76,7 @@
 
 <div id="search-overlay">
     <i class="material-icons" onclick="toggleSearch(false)" style="color:#888;">arrow_back</i>
-    <input type="text" id="search-input" style="-webkit-flex:1; flex:1; border:none; margin:0 10px; font-size:16px; outline:none;" placeholder="検索" onkeypress="if(event.key==='Enter')executeSearch()">
+    <input type="text" id="search-input" style="-webkit-flex:1; flex:1; border:none; margin:0 10px; font-size:16px; outline:none;" placeholder="検索" onkeypress="if(event.keyCode==13){executeSearch();return false;}">
 </div>
 
 <div class="scroll-container"><div id="main-grid"></div></div>
@@ -143,7 +143,6 @@
     var API_KEY = 'AIzaSyAjKk_B19vhdtdjMxMABWK1DO9maUHcxbw';
     var currentId = '';
 
-    // async/await + fetch の代わりに XMLHttpRequest を使ったPromiseラッパー
     function xhrGet(url) {
         return new Promise(function(resolve, reject) {
             var xhr = new XMLHttpRequest();
@@ -169,7 +168,10 @@
 
     function toggleSearch(s) {
         document.getElementById('search-overlay').style.display = s ? '-webkit-flex' : 'none';
-        if (s) document.getElementById('search-overlay').style.display = 'flex';
+        if (s) {
+            document.getElementById('search-overlay').style.display = 'flex';
+            document.getElementById('search-input').focus();
+        }
     }
 
     function loadHome() {
@@ -204,7 +206,6 @@
             var views = item.statistics ? formatViews(item.statistics.viewCount) : '';
             var div = document.createElement('div');
             div.className = 'v-card';
-            // closureのためにitemをコピー
             (function(v, s, st) {
                 div.onclick = function() { openWatch(v, s, st); };
             })(vid, snip, item.statistics);
@@ -222,7 +223,6 @@
         document.getElementById('w-likes').innerText = formatLikes(stats ? stats.likeCount : null);
         document.getElementById('w-stats').innerText = parseInt(stats ? stats.viewCount || 0 : 0).toLocaleString() + ' 回視聴 ・ ' + formatTimeAgo(snip.publishedAt);
 
-        // 1. チャンネル情報
         xhrGet('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=' + snip.channelId + '&key=' + API_KEY)
         .then(function(cData) {
             var chan = cData.items[0];
@@ -232,7 +232,6 @@
             document.getElementById('w-ch-row').onclick = function() { openChannel(chan); };
         });
 
-        // 2. コメント
         xhrGet('https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=' + id + '&maxResults=5&key=' + API_KEY)
         .then(function(mData) {
             var mL = document.getElementById('w-comments-list');
@@ -245,7 +244,6 @@
             }
         });
 
-        // 3. 次の動画
         xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=' + encodeURIComponent(snip.title) + '&key=' + API_KEY)
         .then(function(rData) {
             var rL = document.getElementById('w-related-list');
@@ -302,7 +300,6 @@
         return parseInt(n) > 10000 ? (parseInt(n) / 10000).toFixed(1) + '万回' : parseInt(n).toLocaleString() + '回';
     }
 
-    // ミニプレイヤー制御
     function minimize() {
         document.getElementById('watch-view').style.display = 'none';
         document.getElementById('mini-player').style.display = 'block';
