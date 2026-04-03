@@ -19,11 +19,10 @@
         
         /* ビデオカード */
         .v-card { background: #fff; border-bottom: 1px solid #e2e2e2; cursor: pointer; }
-        .thumb-wrapper { position: relative; width: 100%; background: #000; overflow: hidden; padding-top: 56.25%; /* aspect-ratio: 16/9 の代替 */ }
+        .thumb-wrapper { position: relative; width: 100%; background: #000; overflow: hidden; padding-top: 56.25%; }
         .thumb-wrapper img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
         .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; padding: 2px 4px; font-size: 11px; border-radius: 2px; }
         
-        /* タイトルの省略処理 */
         .v-title { font-size: 14px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
 
         .v-meta { padding: 12px; display: -webkit-flex; display: flex; gap: 12px; }
@@ -48,7 +47,7 @@
         .comm-actions { display: -webkit-flex; display: flex; gap: 15px; margin-top: 8px; color: #888; font-size: 12px; -webkit-align-items: center; align-items: center; }
         .comm-actions i { font-size: 16px !important; }
 
-        /* 次の動画（縦並び・サムネ大きく） */
+        /* 次の動画 */
         .related-item { display: block; margin-bottom: 16px; cursor: pointer; }
         .related-thumb { width: 100%; position: relative; padding-top: 56.25%; background: #000; border-radius: 4px; overflow: hidden; }
         .related-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -56,8 +55,10 @@
         .related-title { font-size: 13px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
 
         nav { background: #fff; height: 49px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #e2e2e2; display: -webkit-flex; display: flex; z-index: 4000; }
-        .nav-item { -webkit-flex: 1; flex: 1; text-align: center; padding-top: 6px; color: #757575; font-size: 10px; }
+        .nav-item { -webkit-flex: 1; flex: 1; text-align: center; padding-top: 6px; color: #757575; font-size: 10px; cursor: pointer; }
         .nav-item i { display: block; font-size: 24px; margin-bottom: 2px; }
+        .nav-item.active { color: #cc0000; }
+        .nav-item.active i { color: #cc0000; }
 
         #search-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 50px; background: #fff; z-index: 5000; -webkit-align-items: center; align-items: center; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid #ddd; }
         .sub-btn { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 2px; font-weight: bold; font-size: 13px; cursor: pointer; }
@@ -69,8 +70,9 @@
 <header>
     <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" style="height:20px;">
     <div style="display: -webkit-flex; display: flex; gap: 0;">
-        <i class="material-icons h-icon" onclick="toggleSearch(true)" style="padding: 0 14px;">search</i>
-        <i class="material-icons h-icon" style="padding: 0 14px;">account_circle</i>
+        <i class="material-icons h-icon" style="padding: 0 10px;">videocam</i>
+        <i class="material-icons h-icon" onclick="toggleSearch(true)" style="padding: 0 10px;">search</i>
+        <i class="material-icons h-icon" style="padding: 0 10px;">more_vert</i>
     </div>
 </header>
 
@@ -84,10 +86,10 @@
 <div id="mini-player" onclick="restoreMini()"><div id="mini-video-wrap" style="width:100%; height:100%;"></div></div>
 
 <nav>
-    <div class="nav-item" onclick="location.reload()"><i class="material-icons">home</i>ホーム</div>
-    <div class="nav-item"><i class="material-icons">whatshot</i>急上昇</div>
-    <div class="nav-item"><i class="material-icons">subscriptions</i>登録済み</div>
-    <div class="nav-item"><i class="material-icons">video_library</i>ライブラリ</div>
+    <div class="nav-item active" id="nav-home" onclick="navClick('home')"><i class="material-icons">home</i>ホーム</div>
+    <div class="nav-item" id="nav-trending" onclick="navClick('trending')"><i class="material-icons">whatshot</i>急上昇</div>
+    <div class="nav-item" id="nav-subs" onclick="navClick('subs')"><i class="material-icons">subscriptions</i>登録済み</div>
+    <div class="nav-item" id="nav-library" onclick="navClick('library')"><i class="material-icons">folder</i>ライブラリ</div>
 </nav>
 
 <div id="watch-view" class="full-view">
@@ -143,6 +145,15 @@
     var API_KEY = 'AIzaSyAjKk_B19vhdtdjMxMABWK1DO9maUHcxbw';
     var currentId = '';
 
+    function navClick(tab) {
+        var tabs = ['home', 'trending', 'subs', 'library'];
+        tabs.forEach(function(t) {
+            document.getElementById('nav-' + t).classList.remove('active');
+        });
+        document.getElementById('nav-' + tab).classList.add('active');
+        if (tab === 'home') { location.reload(); }
+    }
+
     function xhrGet(url) {
         return new Promise(function(resolve, reject) {
             var xhr = new XMLHttpRequest();
@@ -150,14 +161,8 @@
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
-                        try {
-                            resolve(JSON.parse(xhr.responseText));
-                        } catch(e) {
-                            reject(e);
-                        }
-                    } else {
-                        reject(new Error('HTTP ' + xhr.status));
-                    }
+                        try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
+                    } else { reject(new Error('HTTP ' + xhr.status)); }
                 }
             };
             xhr.send();
@@ -176,9 +181,7 @@
 
     function loadHome() {
         var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=10&key=' + API_KEY;
-        xhrGet(url).then(function(data) {
-            renderGrid(data.items, 'main-grid');
-        });
+        xhrGet(url).then(function(data) { renderGrid(data.items, 'main-grid'); });
     }
 
     function executeSearch() {
@@ -190,9 +193,7 @@
             var ids = data.items.map(function(i) { return i.id.videoId; }).join(',');
             return xhrGet('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=' + ids + '&key=' + API_KEY);
         })
-        .then(function(detailData) {
-            renderGrid(detailData.items, 'main-grid');
-        });
+        .then(function(detailData) { renderGrid(detailData.items, 'main-grid'); });
     }
 
     function renderGrid(items, targetId) {
@@ -206,9 +207,7 @@
             var views = item.statistics ? formatViews(item.statistics.viewCount) : '';
             var div = document.createElement('div');
             div.className = 'v-card';
-            (function(v, s, st) {
-                div.onclick = function() { openWatch(v, s, st); };
-            })(vid, snip, item.statistics);
+            (function(v, s, st) { div.onclick = function() { openWatch(v, s, st); }; })(vid, snip, item.statistics);
             div.innerHTML = '<div class="thumb-wrapper"><img src="' + snip.thumbnails.medium.url + '"><div class="v-duration">' + duration + '</div></div><div class="v-meta"><div class="ch-icon"></div><div class="v-info"><div class="v-title">' + snip.title + '</div><div class="v-stats-line">' + snip.channelTitle + ' ・ ' + views + ' ・ ' + timeAgo + '</div></div></div>';
             grid.appendChild(div);
         });
@@ -268,9 +267,7 @@
         var banner = (chan.brandingSettings && chan.brandingSettings.image) ? chan.brandingSettings.image.bannerExternalUrl || '' : '';
         document.getElementById('ch-banner').style.backgroundImage = "url('" + banner + "')";
         xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + chan.id + '&maxResults=10&order=date&type=video&key=' + API_KEY)
-        .then(function(vData) {
-            renderGrid(vData.items, 'ch-videos-list');
-        });
+        .then(function(vData) { renderGrid(vData.items, 'ch-videos-list'); });
     }
 
     function formatLikes(num) {
