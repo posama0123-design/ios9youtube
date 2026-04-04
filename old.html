@@ -11,100 +11,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>YouTube '17 iOS v14</title>
     <style>
+        * { box-sizing: border-box; }
         body { margin: 0; padding: 0; background-color: #f1f1f1; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; }
-        header { background-color: #fff; height: 50px; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #e2e2e2; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; padding: 0 15px; box-sizing: border-box; -webkit-justify-content: space-between; justify-content: space-between; }
+
+        header { background-color: #fff; height: 50px; position: fixed; top: 0; width: 100%; z-index: 1000; border-bottom: 1px solid #e2e2e2; display: flex; align-items: center; padding: 0 15px; justify-content: space-between; }
         .h-icon { color: #888; font-size: 24px !important; cursor: pointer; }
 
+        #search-header { display: none; background: #fff; height: 50px; position: fixed; top: 0; width: 100%; z-index: 5000; align-items: center; padding: 0 10px; border-bottom: 1px solid #ddd; gap: 8px; }
+        #search-header.active { display: flex; }
+        #search-input { flex: 1; border: none; font-size: 16px; outline: none; color: #222; }
+
         .scroll-container { position: absolute; top: 50px; bottom: 49px; width: 100%; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
-        
+
         .v-card { background: #fff; border-bottom: 1px solid #e2e2e2; cursor: pointer; }
         .thumb-wrapper { position: relative; width: 100%; background: #000; overflow: hidden; padding-top: 56.25%; }
         .thumb-wrapper img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
         .v-duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: #fff; padding: 2px 4px; font-size: 11px; border-radius: 2px; }
-        
         .v-title { font-size: 14px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
-
-        .v-meta { padding: 12px; display: -webkit-flex; display: flex; gap: 12px; }
-        .ch-icon { width: 36px; height: 36px; border-radius: 50%; background: #eee; -webkit-flex-shrink: 0; flex-shrink: 0; object-fit: cover; }
-        .v-info { -webkit-flex: 1; flex: 1; overflow: hidden; }
+        .v-meta { padding: 12px; display: flex; gap: 12px; }
+        .ch-icon { width: 36px; height: 36px; border-radius: 50%; background: #eee; flex-shrink: 0; object-fit: cover; }
+        .v-info { flex: 1; overflow: hidden; }
         .v-stats-line { font-size: 12px; color: #606060; margin-top: 4px; }
 
-        #mini-player { display: none; position: fixed; bottom: 58px; right: 8px; width: 160px; height: 90px; background: #000; z-index: 3000; border-radius: 4px; overflow: hidden; -webkit-box-shadow: 0 4px 12px rgba(0,0,0,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; }
+        /* 検索結果リスト */
+        .sr-item { background: #fff; border-bottom: 1px solid #e2e2e2; display: flex; align-items: flex-start; padding: 10px 12px; gap: 10px; cursor: pointer; }
+        .sr-thumb-inner { position: relative; width: 160px; flex-shrink: 0; padding-top: 0; }
+        .sr-thumb-img-wrap { position: relative; width: 160px; height: 90px; background: #000; overflow: hidden; border-radius: 2px; }
+        .sr-thumb-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .sr-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.8); color: #fff; padding: 1px 3px; font-size: 10px; border-radius: 2px; }
+        .sr-info { flex: 1; overflow: hidden; }
+        .sr-title { font-size: 13px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .sr-meta { font-size: 11px; color: #606060; margin-top: 4px; line-height: 1.5; }
+
+        #mini-player { display: none; position: fixed; bottom: 58px; right: 8px; width: 160px; height: 90px; background: #000; z-index: 3000; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer; }
 
         .full-view { display: none; position: fixed; top: 0; left: 0; width: 100%; bottom: 49px; background: #fff; z-index: 2000; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
-        .player-box { width: 100%; padding-top: 56.25%; background: #000; position: -webkit-sticky; position: sticky; top: 0; z-index: 2100; }
-        
-        .action-bar { display: -webkit-flex; display: flex; border-bottom: 1px solid #eee; padding: 12px 0; }
-        .action-btn { -webkit-flex: 1; flex: 1; text-align: center; color: #606060; font-size: 10px; cursor: pointer; }
+        .player-box { width: 100%; padding-top: 56.25%; background: #000; position: sticky; top: 0; z-index: 2100; }
+        .action-bar { display: flex; border-bottom: 1px solid #eee; padding: 12px 0; }
+        .action-btn { flex: 1; text-align: center; color: #606060; font-size: 10px; cursor: pointer; }
         .action-btn i { display: block; font-size: 22px; margin-bottom: 2px; color: #888; }
-
-        .comment-row { padding: 15px; border-bottom: 1px solid #eee; display: -webkit-flex; display: flex; gap: 12px; }
-        .comm-actions { display: -webkit-flex; display: flex; gap: 15px; margin-top: 8px; color: #888; font-size: 12px; -webkit-align-items: center; align-items: center; }
+        .comment-row { padding: 15px; border-bottom: 1px solid #eee; display: flex; gap: 12px; }
+        .comm-actions { display: flex; gap: 15px; margin-top: 8px; color: #888; font-size: 12px; align-items: center; }
         .comm-actions i { font-size: 16px !important; }
-
         .related-item { display: block; margin-bottom: 16px; cursor: pointer; }
         .related-thumb { width: 100%; position: relative; padding-top: 56.25%; background: #000; border-radius: 4px; overflow: hidden; }
         .related-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         .related-info { padding: 8px 4px 0; overflow: hidden; }
         .related-title { font-size: 13px; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
+        .sub-btn { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 2px; font-weight: bold; font-size: 13px; cursor: pointer; }
 
-        nav { background: #fff; height: 49px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #e2e2e2; display: -webkit-flex; display: flex; z-index: 4000; }
-        .nav-item { -webkit-flex: 1; flex: 1; text-align: center; padding-top: 6px; color: #757575; font-size: 10px; cursor: pointer; }
-        .nav-item i { display: block; font-size: 24px; margin-bottom: 2px; }
+        nav { background: #fff; height: 49px; position: fixed; bottom: 0; width: 100%; border-top: 1px solid #e2e2e2; display: flex; z-index: 4000; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 0 3px; color: #757575; font-size: 10px; cursor: pointer; line-height: 1; gap: 2px; }
+        .nav-item i { font-size: 24px; }
         .nav-item.active { color: #cc0000; }
         .nav-item.active i { color: #cc0000; }
 
-        /* 登録チャンネルタブ — 通知バッジ付き */
-        .nav-subs-wrap { position: relative; display: inline-block; }
-        .nav-notif-dot { position: absolute; top: -1px; right: -4px; width: 8px; height: 8px; background: #cc0000; border-radius: 50%; border: 1.5px solid #fff; }
+        .nav-subs-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+        .nav-notif-dot { position: absolute; top: 0; right: -5px; width: 7px; height: 7px; background: #cc0000; border-radius: 50%; border: 1.5px solid #fff; }
 
-        #search-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 50px; background: #fff; z-index: 5000; -webkit-align-items: center; align-items: center; padding: 0 10px; box-sizing: border-box; border-bottom: 1px solid #ddd; }
-        .sub-btn { background: #cc0000; color: #fff; border: none; padding: 8px 16px; border-radius: 2px; font-weight: bold; font-size: 13px; cursor: pointer; }
-
-        /* チャンネルページタブ */
-        .ch-tabs { display: -webkit-flex; display: flex; border-bottom: 2px solid #e2e2e2; background: #fff; position: -webkit-sticky; position: sticky; top: 44px; z-index: 2100; }
-        .ch-tab { -webkit-flex: 1; flex: 1; text-align: center; padding: 10px 4px; font-size: 13px; color: #606060; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; box-sizing: border-box; }
+        .ch-tabs { display: flex; border-bottom: 2px solid #e2e2e2; background: #fff; position: sticky; top: 44px; z-index: 2100; }
+        .ch-tab { flex: 1; text-align: center; padding: 10px 4px; font-size: 13px; color: #606060; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
         .ch-tab.active { color: #cc0000; border-bottom: 2px solid #cc0000; font-weight: 500; }
     </style>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
 
-<header>
+<!-- 通常ヘッダー -->
+<header id="main-header">
     <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" style="height:20px;">
-    <div style="display: -webkit-flex; display: flex; gap: 0;">
-        <i class="material-icons h-icon" style="padding: 0 10px;">videocam</i>
-        <i class="material-icons h-icon" onclick="toggleSearch(true)" style="padding: 0 10px;">search</i>
-        <i class="material-icons h-icon" style="padding: 0 10px;">more_vert</i>
+    <div style="display:flex;">
+        <i class="material-icons h-icon" style="padding:0 10px;">videocam</i>
+        <i class="material-icons h-icon" onclick="openSearchBar()" style="padding:0 10px;">search</i>
+        <i class="material-icons h-icon" style="padding:0 10px;">more_vert</i>
     </div>
 </header>
 
-<div id="search-overlay">
-    <i class="material-icons" onclick="toggleSearch(false)" style="color:#888;">arrow_back</i>
-    <input type="text" id="search-input" style="-webkit-flex:1; flex:1; border:none; margin:0 10px; font-size:16px; outline:none;" placeholder="検索" onkeypress="if(event.keyCode==13){executeSearch();return false;}">
+<!-- 検索入力ヘッダー -->
+<div id="search-header">
+    <i class="material-icons" onclick="closeSearchBar()" style="color:#888; cursor:pointer; font-size:24px; flex-shrink:0;">arrow_back</i>
+    <input type="text" id="search-input" placeholder="検索" onkeypress="if(event.keyCode==13){executeSearch();return false;}">
 </div>
+
+<!-- 検索結果ヘッダー -->
+<header id="result-header" style="display:none;">
+    <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
+        <i class="material-icons h-icon" onclick="backFromResults()" style="flex-shrink:0;">arrow_back</i>
+        <span id="search-query-label" style="font-size:16px; color:#222; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></span>
+    </div>
+    <div style="display:flex;">
+        <i class="material-icons h-icon" style="padding:0 8px;">search</i>
+        <i class="material-icons h-icon" style="padding:0 8px;">more_vert</i>
+    </div>
+</header>
 
 <div class="scroll-container"><div id="main-grid"></div></div>
 
 <div id="mini-player" onclick="restoreMini()"><div id="mini-video-wrap" style="width:100%; height:100%;"></div></div>
 
 <nav>
-    <div class="nav-item active" id="nav-home" onclick="navClick('home')"><i class="material-icons">home</i>ホーム</div>
-    <div class="nav-item" id="nav-trending" onclick="navClick('trending')"><i class="material-icons">whatshot</i>急上昇</div>
+    <div class="nav-item active" id="nav-home" onclick="navClick('home')">
+        <i class="material-icons">home</i>ホーム
+    </div>
+    <div class="nav-item" id="nav-trending" onclick="navClick('trending')">
+        <i class="material-icons">whatshot</i>急上昇
+    </div>
     <div class="nav-item" id="nav-subs" onclick="navClick('subs')">
         <div class="nav-subs-wrap">
             <i class="material-icons">subscriptions</i>
             <span class="nav-notif-dot"></span>
         </div>
-   登録済み
+        登録チャンネル
     </div>
-    <div class="nav-item" id="nav-library" onclick="navClick('library')"><i class="material-icons">folder</i>ライブラリ</div>
+    <div class="nav-item" id="nav-library" onclick="navClick('library')">
+        <i class="material-icons">folder</i>ライブラリ
+    </div>
 </nav>
 
 <div id="watch-view" class="full-view">
     <div class="player-box">
         <div id="player-container" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
-        <div style="position:absolute; top:8px; left:8px; right:8px; display:-webkit-flex; display:flex; -webkit-justify-content:space-between; justify-content:space-between; pointer-events:none;">
+        <div style="position:absolute; top:8px; left:8px; right:8px; display:flex; justify-content:space-between; pointer-events:none;">
             <i class="material-icons" style="color:#fff; text-shadow:0 0 4px #000; pointer-events:auto;" onclick="minimize()">expand_more</i>
             <i class="material-icons" style="color:#fff; text-shadow:0 0 4px #000; pointer-events:auto;" onclick="closeWatch()">close</i>
         </div>
@@ -120,66 +147,49 @@
             <div class="action-btn"><i class="material-icons">reply</i>共有</div>
             <div class="action-btn"><i class="material-icons">playlist_add</i>追加</div>
         </div>
-        <div id="w-ch-row" style="padding:12px 15px; border-bottom:1px solid #eee; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:12px; cursor:pointer;">
+        <div id="w-ch-row" style="padding:12px 15px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:12px; cursor:pointer;">
             <img id="w-ch-img" class="ch-icon">
-            <div style="-webkit-flex:1; flex:1;"><div id="w-ch-name" style="font-size:14px; font-weight:500;"></div><div id="w-ch-subs" style="font-size:12px; color:#606060;"></div></div>
+            <div style="flex:1;"><div id="w-ch-name" style="font-size:14px; font-weight:500;"></div><div id="w-ch-subs" style="font-size:12px; color:#606060;"></div></div>
             <button class="sub-btn">登録</button>
         </div>
-        
         <div style="background:#f5f5f5; padding:10px 15px; font-size:14px; border-bottom:1px solid #eee;"><strong>コメント</strong></div>
         <div id="w-comments-list"></div>
-
-        <div style="padding:15px; background:#fff;">
-            <strong>次の動画</strong>
-            <div id="w-related-list" style="margin-top:10px;"></div>
-        </div>
+        <div style="padding:15px; background:#fff;"><strong>次の動画</strong><div id="w-related-list" style="margin-top:10px;"></div></div>
     </div>
 </div>
 
-<!-- チャンネルページ -->
 <div id="ch-view" class="full-view">
-    <!-- ヘッダー: キャスト・検索・︙ -->
-    <div style="position:-webkit-sticky; position:sticky; top:0; background:#fff; z-index:2200; height:44px; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:0 8px; border-bottom:1px solid #eee;">
+    <div style="position:sticky; top:0; background:#fff; z-index:2200; height:44px; display:flex; align-items:center; padding:0 8px; border-bottom:1px solid #eee;">
         <i class="material-icons h-icon" onclick="document.getElementById('ch-view').style.display='none'" style="padding:0 8px;">arrow_back</i>
-        <span id="ch-top-title" style="margin-left:8px; font-weight:500; font-size:16px; -webkit-flex:1; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></span>
+        <span id="ch-top-title" style="margin-left:8px; font-weight:500; font-size:16px; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;"></span>
         <i class="material-icons h-icon" style="padding:0 8px;">cast</i>
         <i class="material-icons h-icon" style="padding:0 8px;">search</i>
         <i class="material-icons h-icon" style="padding:0 8px;">more_vert</i>
     </div>
-
     <div id="ch-banner" style="width:100%; height:100px; background:#ccc; background-size:cover; background-position:center;"></div>
-    <div style="padding:15px; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; gap:15px; border-bottom:1px solid #eee;">
+    <div style="padding:15px; display:flex; align-items:center; gap:15px; border-bottom:1px solid #eee;">
         <img id="ch-large-icon" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
-        <div style="-webkit-flex:1; flex:1;"><div id="ch-main-name" style="font-size:18px; font-weight:500;"></div><div id="ch-main-subs" style="font-size:13px; color:#606060;"></div></div>
+        <div style="flex:1;"><div id="ch-main-name" style="font-size:18px; font-weight:500;"></div><div id="ch-main-subs" style="font-size:13px; color:#606060;"></div></div>
         <button class="sub-btn">登録</button>
     </div>
-
-    <!-- タブ: ホーム・動画・再生リスト・コミュニティ -->
     <div class="ch-tabs">
         <div class="ch-tab active" id="chtab-home" onclick="chTabClick('home')">ホーム</div>
         <div class="ch-tab" id="chtab-videos" onclick="chTabClick('videos')">動画</div>
         <div class="ch-tab" id="chtab-playlists" onclick="chTabClick('playlists')">再生リスト</div>
         <div class="ch-tab" id="chtab-community" onclick="chTabClick('community')">コミュニティ</div>
     </div>
-
     <div id="ch-content-home"><div id="ch-videos-list"></div></div>
     <div id="ch-content-videos" style="display:none;"><div id="ch-videos-list2"></div></div>
-    <div id="ch-content-playlists" style="display:none;">
-        <div style="padding:30px; text-align:center; color:#888; font-size:14px;">再生リストはありません</div>
-    </div>
-    <div id="ch-content-community" style="display:none;">
-        <div style="padding:30px; text-align:center; color:#888; font-size:14px;">コミュニティの投稿はありません</div>
-    </div>
+    <div id="ch-content-playlists" style="display:none;"><div style="padding:30px; text-align:center; color:#888; font-size:14px;">再生リストはありません</div></div>
+    <div id="ch-content-community" style="display:none;"><div style="padding:30px; text-align:center; color:#888; font-size:14px;">コミュニティの投稿はありません</div></div>
 </div>
 
 <script>
     var API_KEY = 'AIzaSyAjKk_B19vhdtdjMxMABWK1DO9maUHcxbw';
     var currentId = '';
-    var currentChId = '';
 
     function navClick(tab) {
-        var tabs = ['home', 'trending', 'subs', 'library'];
-        tabs.forEach(function(t) {
+        ['home','trending','subs','library'].forEach(function(t) {
             document.getElementById('nav-' + t).classList.remove('active');
         });
         document.getElementById('nav-' + tab).classList.add('active');
@@ -187,8 +197,7 @@
     }
 
     function chTabClick(tab) {
-        var tabs = ['home', 'videos', 'playlists', 'community'];
-        tabs.forEach(function(t) {
+        ['home','videos','playlists','community'].forEach(function(t) {
             document.getElementById('chtab-' + t).classList.remove('active');
             document.getElementById('ch-content-' + t).style.display = 'none';
         });
@@ -213,29 +222,42 @@
 
     window.onload = function() { loadHome(); };
 
-    function toggleSearch(s) {
-        document.getElementById('search-overlay').style.display = s ? '-webkit-flex' : 'none';
-        if (s) {
-            document.getElementById('search-overlay').style.display = 'flex';
-            document.getElementById('search-input').focus();
-        }
+    function openSearchBar() {
+        document.getElementById('main-header').style.display = 'none';
+        document.getElementById('search-header').classList.add('active');
+        document.getElementById('search-input').value = '';
+        document.getElementById('search-input').focus();
     }
 
-    function loadHome() {
-        var url = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=10&key=' + API_KEY;
-        xhrGet(url).then(function(data) { renderGrid(data.items, 'main-grid'); });
+    function closeSearchBar() {
+        document.getElementById('search-header').classList.remove('active');
+        document.getElementById('main-header').style.display = '';
+    }
+
+    function backFromResults() {
+        document.getElementById('result-header').style.display = 'none';
+        document.getElementById('main-header').style.display = '';
+        loadHome();
     }
 
     function executeSearch() {
-        var q = document.getElementById('search-input').value;
+        var q = document.getElementById('search-input').value.trim();
         if (!q) return;
-        toggleSearch(false);
-        xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=' + encodeURIComponent(q) + '&key=' + API_KEY)
+        document.getElementById('search-header').classList.remove('active');
+        document.getElementById('result-header').style.display = '';
+        document.getElementById('search-query-label').innerText = q;
+
+        xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=15&q=' + encodeURIComponent(q) + '&key=' + API_KEY)
         .then(function(data) {
             var ids = data.items.map(function(i) { return i.id.videoId; }).join(',');
             return xhrGet('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=' + ids + '&key=' + API_KEY);
         })
-        .then(function(detailData) { renderGrid(detailData.items, 'main-grid'); });
+        .then(function(detailData) { renderSearchResults(detailData.items); });
+    }
+
+    function loadHome() {
+        xhrGet('https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=JP&maxResults=10&key=' + API_KEY)
+        .then(function(data) { renderGrid(data.items, 'main-grid'); });
     }
 
     function renderGrid(items, targetId) {
@@ -244,13 +266,33 @@
         items.forEach(function(item) {
             var snip = item.snippet;
             var vid = item.id.videoId || item.id;
-            var duration = item.contentDetails ? formatDuration(item.contentDetails.duration) : '10:00';
-            var timeAgo = formatTimeAgo(snip.publishedAt);
-            var views = item.statistics ? formatViews(item.statistics.viewCount) : '';
+            var duration = item.contentDetails ? formatDuration(item.contentDetails.duration) : '';
             var div = document.createElement('div');
             div.className = 'v-card';
             (function(v, s, st) { div.onclick = function() { openWatch(v, s, st); }; })(vid, snip, item.statistics);
-            div.innerHTML = '<div class="thumb-wrapper"><img src="' + snip.thumbnails.medium.url + '"><div class="v-duration">' + duration + '</div></div><div class="v-meta"><div class="ch-icon"></div><div class="v-info"><div class="v-title">' + snip.title + '</div><div class="v-stats-line">' + snip.channelTitle + ' ・ ' + views + ' ・ ' + timeAgo + '</div></div></div>';
+            div.innerHTML = '<div class="thumb-wrapper"><img src="' + snip.thumbnails.medium.url + '"><div class="v-duration">' + duration + '</div></div>' +
+                '<div class="v-meta"><div class="ch-icon"></div><div class="v-info"><div class="v-title">' + snip.title + '</div>' +
+                '<div class="v-stats-line">' + snip.channelTitle + ' ・ ' + (item.statistics ? formatViews(item.statistics.viewCount) : '') + ' ・ ' + formatTimeAgo(snip.publishedAt) + '</div></div></div>';
+            grid.appendChild(div);
+        });
+    }
+
+    function renderSearchResults(items) {
+        var grid = document.getElementById('main-grid');
+        grid.innerHTML = '';
+        items.forEach(function(item) {
+            var snip = item.snippet;
+            var vid = item.id.videoId || item.id;
+            var duration = item.contentDetails ? formatDuration(item.contentDetails.duration) : '';
+            var views = item.statistics ? formatViews(item.statistics.viewCount) : '';
+            var div = document.createElement('div');
+            div.className = 'sr-item';
+            (function(v, s, st) { div.onclick = function() { openWatch(v, s, st); }; })(vid, snip, item.statistics);
+            div.innerHTML =
+                '<div class="sr-thumb-inner"><div class="sr-thumb-img-wrap"><img src="' + snip.thumbnails.medium.url + '"><div class="sr-duration">' + duration + '</div></div></div>' +
+                '<div class="sr-info"><div class="sr-title">' + snip.title + '</div>' +
+                '<div class="sr-meta">' + snip.channelTitle + '<br>' + views + '回視聴 ・ ' + formatTimeAgo(snip.publishedAt) + '</div></div>' +
+                '<i class="material-icons" style="color:#bbb; font-size:20px; align-self:center; flex-shrink:0;">more_vert</i>';
             grid.appendChild(div);
         });
     }
@@ -280,7 +322,7 @@
             if (mData.items) {
                 mData.items.forEach(function(t) {
                     var s = t.snippet.topLevelComment.snippet;
-                    mL.innerHTML += '<div class="comment-row"><img src="' + s.authorProfileImageUrl + '" style="width:32px; height:32px; border-radius:50%;"><div style="flex:1; font-size:13px;"><strong>' + s.authorDisplayName + '</strong> ・ ' + formatTimeAgo(s.publishedAt) + '<br>' + s.textDisplay + '<div class="comm-actions"><i class="material-icons">thumb_up</i><span>' + s.likeCount + '</span><i class="material-icons">thumb_down</i><span>返信</span></div></div></div>';
+                    mL.innerHTML += '<div class="comment-row"><img src="' + s.authorProfileImageUrl + '" style="width:32px;height:32px;border-radius:50%;"><div style="flex:1;font-size:13px;"><strong>' + s.authorDisplayName + '</strong> ・ ' + formatTimeAgo(s.publishedAt) + '<br>' + s.textDisplay + '<div class="comm-actions"><i class="material-icons">thumb_up</i><span>' + s.likeCount + '</span><i class="material-icons">thumb_down</i><span>返信</span></div></div></div>';
                 });
             }
         });
@@ -292,10 +334,9 @@
             rData.items.forEach(function(v) {
                 if (v.id.videoId === id) return;
                 var snipStr = JSON.stringify(v.snippet).replace(/"/g, '&quot;');
-                rL.innerHTML += '<div class="related-item" onclick="event.stopPropagation(); openWatch(\'' + v.id.videoId + '\', ' + snipStr + ', {viewCount:\'123456\'})">' +
+                rL.innerHTML += '<div class="related-item" onclick="event.stopPropagation();openWatch(\'' + v.id.videoId + '\',' + snipStr + ',{viewCount:\'123456\'})">' +
                     '<div class="related-thumb"><img src="' + v.snippet.thumbnails.medium.url + '"></div>' +
-                    '<div class="related-info"><div class="related-title">' + v.snippet.title + '</div><div style="font-size:11px; color:#606060; margin-top:4px;">' + v.snippet.channelTitle + '</div></div>' +
-                    '</div>';
+                    '<div class="related-info"><div class="related-title">' + v.snippet.title + '</div><div style="font-size:11px;color:#606060;margin-top:4px;">' + v.snippet.channelTitle + '</div></div></div>';
             });
         });
     }
@@ -308,9 +349,7 @@
         document.getElementById('ch-main-subs').innerText = '登録者数 ' + parseInt(chan.statistics.subscriberCount).toLocaleString() + '人';
         var banner = (chan.brandingSettings && chan.brandingSettings.image) ? chan.brandingSettings.image.bannerExternalUrl || '' : '';
         document.getElementById('ch-banner').style.backgroundImage = "url('" + banner + "')";
-
         chTabClick('home');
-
         xhrGet('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=' + chan.id + '&maxResults=10&order=date&type=video&key=' + API_KEY)
         .then(function(vData) {
             renderGrid(vData.items, 'ch-videos-list');
@@ -321,34 +360,30 @@
     function formatLikes(num) {
         if (!num) return '評価';
         var n = parseInt(num);
-        if (n >= 10000) return (n / 10000).toFixed(1) + '万';
-        return n.toLocaleString();
+        return n >= 10000 ? (n / 10000).toFixed(1) + '万' : n.toLocaleString();
     }
-
     function formatTimeAgo(dateStr) {
         var diff = (new Date() - new Date(dateStr)) / 1000;
         if (diff < 3600) return '1時間前';
-        if (diff < 86400) return Math.floor(diff / 3600) + '時間前';
-        if (diff < 2592000) return Math.floor(diff / 86400) + '日前';
-        if (diff < 31104000) return Math.floor(diff / 2592000) + 'ヶ月前';
-        return Math.floor(diff / 31104000) + '年前';
+        if (diff < 86400) return Math.floor(diff/3600) + '時間前';
+        if (diff < 2592000) return Math.floor(diff/86400) + '日前';
+        if (diff < 31104000) return Math.floor(diff/2592000) + 'ヶ月前';
+        return Math.floor(diff/31104000) + '年前';
     }
-
     function formatDuration(pt) {
         var m = pt.match(/\d+/g);
-        if (!m) return '10:00';
-        if (m.length === 1) return '0:' + (m[0].length < 2 ? '0' + m[0] : m[0]);
-        return m[0] + ':' + (m[1].length < 2 ? '0' + m[1] : m[1]);
+        if (!m) return '';
+        if (m.length === 1) return '0:' + (m[0].length < 2 ? '0'+m[0] : m[0]);
+        return m[0] + ':' + (m[1].length < 2 ? '0'+m[1] : m[1]);
     }
-
     function formatViews(n) {
-        return parseInt(n) > 10000 ? (parseInt(n) / 10000).toFixed(1) + '万回' : parseInt(n).toLocaleString() + '回';
+        return parseInt(n) > 10000 ? (parseInt(n)/10000).toFixed(1) + '万' : parseInt(n).toLocaleString();
     }
 
     function minimize() {
         document.getElementById('watch-view').style.display = 'none';
         document.getElementById('mini-player').style.display = 'block';
-        document.getElementById('mini-video-wrap').innerHTML = '<iframe src="https://www.youtube.com/embed/' + currentId + '?autoplay=1&mute=1" style="width:100%; height:100%; border:none;"></iframe>';
+        document.getElementById('mini-video-wrap').innerHTML = '<iframe src="https://www.youtube.com/embed/' + currentId + '?autoplay=1&mute=1" style="width:100%;height:100%;border:none;"></iframe>';
     }
     function restoreMini() { document.getElementById('watch-view').style.display = 'block'; closeMini(); }
     function closeMini() { document.getElementById('mini-player').style.display = 'none'; document.getElementById('mini-video-wrap').innerHTML = ''; }
